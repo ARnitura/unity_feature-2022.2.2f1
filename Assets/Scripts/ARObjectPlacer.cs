@@ -82,12 +82,17 @@ public class ARObjectPlacer : MonoBehaviour
         if (!TryGetTouchPosition(out Vector2 touchPosition))
             return;
 
-        //move object
-        MoveObject();
 
-        if(!objectPlaced)
-        if (m_RaycastManager.Raycast(touchPosition, s_Hits, TrackableType.PlaneWithinPolygon))
-            PlaceObject();
+
+        if (!objectPlaced)
+        {
+            if (m_RaycastManager.Raycast(touchPosition, s_Hits, TrackableType.PlaneWithinPolygon))
+                PlaceObject();
+        }
+        else
+        {
+            ProcessMovement();
+        }
         
 
 
@@ -117,61 +122,63 @@ public class ARObjectPlacer : MonoBehaviour
         objectPlaced = true;
     }
 
-    void MoveObject()
+    void ProcessMovement()
     {
-        if (Input.touchCount > 0)
+
+        // rotate object
+        if (Input.touchCount == 2)
+        {
+            //Debug.Log("Rotation move");
+
+            //get finger and angle
+            var finger = Lean.Touch.LeanTouch.Fingers;
+            var twistDegrees = Lean.Touch.LeanGesture.GetTwistDegrees(finger) * 1;
+            Touch touch1 = Input.touches[0];
+            Touch touch2 = Input.touches[1];
+
+            //rotate object
+            //m_RaycastManager.Raycast(touchPosition, s_Hits, TrackableType.Planes);
+            selectedObject = objectLoader.SpawnedObject.gameObject;
+            selectedObject.transform.Rotate(RotationAxis, twistDegrees);
+            selectedObject.transform.Rotate(RotationAxis, twistDegrees);
+
+            //block set position while rotated
+            isRotating = true;
+        }
+
+        if (Input.touchCount == 1 && !isRotating)
         {
             //get touch count and position
             Touch touch = Input.GetTouch(0);
             var touchPosition = touch.position;
 
-            //if phase began
-            if (touch.phase == TouchPhase.Began)
+            if (!touchLock)
             {
-
-                //create ray hit
-                Ray ray = ARCamera.ScreenPointToRay(touch.position);
-
-                //if ray hit a object
-                if (Physics.Raycast(ray, out RaycastHit hitInfo))
+                //process touch lock
+                if (touch.phase == TouchPhase.Began)
                 {
- #if DEVELOPMENT_BUILD
+                    Ray ray = ARCamera.ScreenPointToRay(touch.position);
+
+                    if (Physics.Raycast(ray, out RaycastHit hitInfo))
+                    {
+#if DEVELOPMENT_BUILD
                         debugRaycastTransform.position = hitInfo.point;
                         //debugRaycastTransform.forward = hitInfo.normal;  
 #endif
-                    //set tag
-                    if (hitInfo.collider.transform == objectLoader.SpawnedObject)
-                    {
-                        touchLock = true;
+
+                        if (hitInfo.collider.transform == objectLoader.SpawnedObject)
+                        {
+                            touchLock = true;
+                        }
                     }
                 }
             }
 
+
             if (touchLock)
             {
-                // move rotation
-                if (Input.touchCount == 2)
-                {
-                    //Debug.Log("Rotation move");
-
-                    //get finger and angle
-                    var finger = Lean.Touch.LeanTouch.Fingers;
-                    var twistDegrees = Lean.Touch.LeanGesture.GetTwistDegrees(finger) * 1;
-                    Touch touch1 = Input.touches[0];
-                    Touch touch2 = Input.touches[1];
-
-                    //rotate object
-                    //m_RaycastManager.Raycast(touchPosition, s_Hits, TrackableType.Planes);
-                    selectedObject = objectLoader.SpawnedObject.gameObject;
-                    selectedObject.transform.Rotate(RotationAxis, twistDegrees);
-                    selectedObject.transform.Rotate(RotationAxis, twistDegrees);
-
-                    //block set position while rotated
-                    isRotating = true;
-                }
-
                 //move
-                if (touch.phase == TouchPhase.Moved && Input.touchCount == 1 && isRotating == false)
+                if (touch.phase == TouchPhase.Moved && isRotating == false)
                 {
                     //Debug.Log("Move model");
 
@@ -180,6 +187,8 @@ public class ARObjectPlacer : MonoBehaviour
                     selectedObject = objectLoader.SpawnedObject.gameObject;
                     selectedObject.transform.position = s_Hits[0].pose.position;
                 }
+
+
             }
             //set tag "UnSelected"
             if (touch.phase == TouchPhase.Ended)
