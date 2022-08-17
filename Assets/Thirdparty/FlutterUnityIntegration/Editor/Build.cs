@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
+using UnityEditorInternal;
 using UnityEngine;
 using Application = UnityEngine.Application;
 using BuildResult = UnityEditor.Build.Reporting.BuildResult;
@@ -29,6 +30,15 @@ public class Build : EditorWindow
         Copy(Path.Combine(apkPath + "/launcher/src/main/res"), Path.Combine(androidExportPath, "src/main/res"));
     }
 
+    [MenuItem("Flutter/Export Android (Debug) %&n", false, 1)]
+    public static void DoBuildAndroidLibraryDebug()
+    {
+        DoBuildAndroidDebug(Path.Combine(apkPath, "unityLibrary"), false);
+
+        // Copy over resources from the launcher module that are used by the library
+        Copy(Path.Combine(apkPath + "/launcher/src/main/res"), Path.Combine(androidExportPath, "src/main/res"));
+    }
+
     [MenuItem("Flutter/Export Android Plugin %&p", false, 2)]
     public static void DoBuildAndroidPlugin()
     {
@@ -49,8 +59,12 @@ public class Build : EditorWindow
         EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;
 
 
-        var options = BuildOptions.AllowDebugging;
+        var options = BuildOptions.None;
         EditorUserBuildSettings.exportAsGoogleAndroidProject = true;
+
+       // PlayerSettings.SetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.Android, "RELEASE");
+       // EditorUtility.RequestScriptReload();
+       // UnityEditor.Compilation.CompilationPipeline.RequestScriptCompilation();
 
         var report = BuildPipeline.BuildPlayer(
             GetEnabledScenes(),
@@ -91,6 +105,67 @@ public class Build : EditorWindow
             SetupAndroidProject();
         }
     }
+
+    public static void DoBuildAndroidDebug(String buildPath, bool isPlugin)
+    {
+        if (Directory.Exists(apkPath))
+            Directory.Delete(apkPath, true);
+
+        if (Directory.Exists(androidExportPath))
+            Directory.Delete(androidExportPath, true);
+
+        EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;
+
+
+        var options = BuildOptions.Development | BuildOptions.CompressWithLz4 | BuildOptions.AllowDebugging;
+        EditorUserBuildSettings.exportAsGoogleAndroidProject = true;
+
+        
+        //PlayerSettings.SetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.Android, "DEBUG");
+        //EditorUtility.RequestScriptReload();
+       // UnityEditor.Compilation.CompilationPipeline.RequestScriptCompilation();
+
+        var report = BuildPipeline.BuildPlayer(
+            GetEnabledScenes(),
+            apkPath,
+            BuildTarget.Android,
+            options
+        );
+
+        if (report.summary.result != BuildResult.Succeeded)
+            throw new Exception("Build failed");
+
+        Copy(buildPath, androidExportPath);
+
+        // Modify build.gradle
+        var build_file = Path.Combine(androidExportPath, "build.gradle");
+        var build_text = File.ReadAllText(build_file);
+        build_text = build_text.Replace("com.android.application", "com.android.library");
+        build_text = build_text.Replace("bundle {", "splits {");
+        build_text = build_text.Replace("enableSplit = false", "enable false");
+        build_text = build_text.Replace("enableSplit = true", "enable true");
+        build_text = build_text.Replace("implementation fileTree(dir: 'libs', include: ['*.jar'])", "implementation(name: 'unity-classes', ext:'jar')");
+        build_text = Regex.Replace(build_text, @"\n.*applicationId '.+'.*\n", "\n");
+        File.WriteAllText(build_file, build_text);
+
+        // Modify AndroidManifest.xml
+        var manifest_file = Path.Combine(androidExportPath, "src/main/AndroidManifest.xml");
+        var manifest_text = File.ReadAllText(manifest_file);
+        manifest_text = Regex.Replace(manifest_text, @"<application .*>", "<application>");
+        Regex regex = new Regex(@"<activity.*>(\s|\S)+?</activity>", RegexOptions.Multiline);
+        manifest_text = regex.Replace(manifest_text, "");
+        File.WriteAllText(manifest_file, manifest_text);
+
+        if (isPlugin)
+        {
+            SetupAndroidProjectForPlugin();
+        }
+        else
+        {
+            SetupAndroidProject();
+        }
+    }
+
 
     [MenuItem("Flutter/Export IOS %&i", false, 3)]
     public static void DoBuildIOS()

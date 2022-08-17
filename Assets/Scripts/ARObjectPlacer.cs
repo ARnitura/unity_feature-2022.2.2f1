@@ -41,8 +41,8 @@ public class ARObjectPlacer : MonoBehaviour
     bool isRotating = false;
     bool touchLock = false;
 
-    [SerializeField]
-    bool debugMode = false;
+   // [SerializeField]
+    //bool debugMode = false;
 
     public void ResetObject()
     {
@@ -135,11 +135,10 @@ public class ARObjectPlacer : MonoBehaviour
                 //if ray hit a object
                 if (Physics.Raycast(ray, out RaycastHit hitInfo))
                 {
-                    if (debugMode)
-                    {
+ #if DEVELOPMENT_BUILD
                         debugRaycastTransform.position = hitInfo.point;
-                        //debugRaycastTransform.forward = hitInfo.normal;
-                    }
+                        //debugRaycastTransform.forward = hitInfo.normal;  
+#endif
                     //set tag
                     if (hitInfo.collider.transform == objectLoader.SpawnedObject)
                     {

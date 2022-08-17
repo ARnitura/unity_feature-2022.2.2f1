@@ -34,9 +34,6 @@ public class ARObjectLoader : MonoBehaviour
 
     [SerializeField]
     Transform axisPrefab;
-
-    [SerializeField]
-    bool debugMode = false;
     [SerializeField]
     Transform colliderDebugPrefab;
     [SerializeField]
@@ -53,18 +50,22 @@ public class ARObjectLoader : MonoBehaviour
     {
         if (SpawnedObject)
             Destroy(SpawnedObject.gameObject);
+        #if DEVELOPMENT_BUILD
         else
+            
             Debug.LogWarning("Warning: Trying to clear empty scene!");
+        #endif
     }
 
 
     public void LoadModel(string filePath)
     {
         lastModelPath = filePath;
-        
 
 
+#if DEVELOPMENT_BUILD
         Debug.Log($"loading model from {filePath}");
+#endif
         /*
         AssetLoaderContext loadedModel = AssetLoader.LoadModelFromFileNoThread(filePath, null, null, assetLoaderOptions);
         spawnedObject = loadedModel.RootGameObject.gameObject;
@@ -88,7 +89,9 @@ public class ARObjectLoader : MonoBehaviour
             GetComponent<UnityMessageManager>().SendMessageToFlutter("Модель поставлена");
             
             SpawnedObject.gameObject.SetActive(false);
+#if DEVELOPMENT_BUILD
             Debug.LogWarning($"Model loaded GO_name= {SpawnedObject.name}");
+#endif
         }, 
         null, null, null, assetLoaderOptions, null);
         
@@ -157,8 +160,7 @@ public class ARObjectLoader : MonoBehaviour
         modelCollider.center = resultingBounds.center;
         modelCollider.size = resultingBounds.size;
 
-        if(debugMode)
-        {
+#if DEVELOPMENT_BUILD
             Transform debugCollider = Instantiate(colliderDebugPrefab, SpawnedObject.position, SpawnedObject.rotation);
             debugCollider.position = resultingBounds.center;
             debugCollider.localScale = resultingBounds.size;
@@ -167,35 +169,20 @@ public class ARObjectLoader : MonoBehaviour
             Transform debugAxis = Instantiate(axisDebugPrefab, SpawnedObject.position, SpawnedObject.rotation);
             debugAxis.SetParent(SpawnedObject);
             debugAxis.forward = SpawnedObject.forward;
-        }
+#endif
     }
 
     public void LoadTextures(string allPath)
     {
+#if DEVELOPMENT_BUILD
         Debug.Log($"loading textures from path {allPath}");
-
+#endif
         lastTexPath = allPath;
-        //enableMap("_METALLICGLOSSMAP");
-        //enableMap("_NORMALMAP");
-        //enableMap("_PARALLAXMAP");
 
-        /*
-        Transform ob;
-        if (this.gameObject.transform.childCount == 1)
-        {
-            ob = this.gameObject.transform.GetChild(0);
-            Debug.LogWarning("Seems like loaded model's top root GO is dummy, taking first child children as meshes");
-        }
-        else
-        {
-            ob = spawnedObject.transform;
-            Debug.LogWarning("Taking 3d model children as meshes");
-        }
-        */
-
-        //Debug.Assert(SpawnedObject != null);
+#if DEVELOPMENT_BUILD
         if (!SpawnedObject)
             Debug.LogError("spawnedObject nullpo on texture loading");
+#endif
 
         MeshRenderer[] meshRenderers = SpawnedObject.GetComponentsInChildren<MeshRenderer>();
         //Debug.Log($"got mesh renderers list");
@@ -287,10 +274,12 @@ public class ARObjectLoader : MonoBehaviour
 
             // EXAMPLE: LoadTexture(["Wood_BaseColor"])
         }
+#if DEVELOPMENT_BUILD
         if (loadedTex != mapCount)
             Debug.LogWarning($"Loaded {loadedTex}/{mapCount} textures");
         else
             Debug.Log("Tex loading complete");
+#endif
     }
 
 
@@ -305,7 +294,9 @@ public class ARObjectLoader : MonoBehaviour
             tex = new Texture2D(2, 2);
             if(!tex.LoadImage(fileData)) //..this will auto-resize the texture dimensions.
             {
+#if DEVELOPMENT_BUILD
                 Debug.LogError($"failed to load texture from path: {filePath}");
+#endif
             }
 
 
@@ -318,6 +309,8 @@ public class ARObjectLoader : MonoBehaviour
     {
         return Mathf.Round(value * 10) / 10;
     }
+
+#if DEVELOPMENT_BUILD
     public void DebugReloadModel()
     {
         ClearObject();
@@ -338,4 +331,5 @@ public class ARObjectLoader : MonoBehaviour
         CreateAxisSizes();
         SpawnedObject.gameObject.SetActive(false);
     }
+#endif
 }
