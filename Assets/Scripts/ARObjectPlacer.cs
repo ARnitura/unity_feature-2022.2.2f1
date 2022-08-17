@@ -161,7 +161,7 @@ public class ARObjectPlacer : MonoBehaviour
 
                     if (Physics.Raycast(ray, out RaycastHit hitInfo))
                     {
-#if DEVELOPMENT_BUILD
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
                         debugRaycastTransform.position = hitInfo.point;
                         //debugRaycastTransform.forward = hitInfo.normal;  
 #endif

@@ -9,7 +9,7 @@ public class DebugComponentsManager : MonoBehaviour
     void Start()
     {
 
-#if !DEVELOPMENT_BUILD
+#if !DEVELOPMENT_BUILD && !UNITY_EDITOR
         for (int i = 0; i < debugComponents.Length; i++)
         {
             Destroy(debugComponents[i]);

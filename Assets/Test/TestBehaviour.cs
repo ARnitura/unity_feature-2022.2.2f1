@@ -36,7 +36,14 @@ public class TestBehaviour : MonoBehaviour
             //load texture
             Debug.Log($"Emulating <load texture> call from flutter");
             messages.LoadTexture(testFolderDir + @"tex\Leather_BaseColor.jpg");
-            
+            messages.LoadTexture(testFolderDir + @"tex\Leather_Normal.jpg");
+            messages.LoadTexture(testFolderDir + @"tex\Leather_AO.jpg");
+
+            messages.LoadTexture(testFolderDir + @"tex\Wood_BaseColor.jpg");
+            messages.LoadTexture(testFolderDir + @"tex\Wood_Normal.jpg");
+           // messages.LoadTexture(testFolderDir + @"tex\Leather_AO.jpg");
+            //messages.LoadTexture(testFolderDir + @"tex\Leather_Rough.jpg");
+
         }
         if (Input.GetKeyDown(KeyCode.E))
         {

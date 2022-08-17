@@ -50,7 +50,7 @@ public class ARObjectLoader : MonoBehaviour
     {
         if (SpawnedObject)
             Destroy(SpawnedObject.gameObject);
-        #if DEVELOPMENT_BUILD
+        #if DEVELOPMENT_BUILD || UNITY_EDITOR
         else
             
             Debug.LogWarning("Warning: Trying to clear empty scene!");
@@ -63,7 +63,7 @@ public class ARObjectLoader : MonoBehaviour
         lastModelPath = filePath;
 
 
-#if DEVELOPMENT_BUILD
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
         Debug.Log($"loading model from {filePath}");
 #endif
         /*
@@ -89,7 +89,7 @@ public class ARObjectLoader : MonoBehaviour
             GetComponent<UnityMessageManager>().SendMessageToFlutter("Модель поставлена");
             
             SpawnedObject.gameObject.SetActive(false);
-#if DEVELOPMENT_BUILD
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
             Debug.LogWarning($"Model loaded GO_name= {SpawnedObject.name}");
 #endif
         }, 
@@ -160,7 +160,7 @@ public class ARObjectLoader : MonoBehaviour
         modelCollider.center = resultingBounds.center;
         modelCollider.size = resultingBounds.size;
 
-#if DEVELOPMENT_BUILD
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
             Transform debugCollider = Instantiate(colliderDebugPrefab, SpawnedObject.position, SpawnedObject.rotation);
             debugCollider.position = resultingBounds.center;
             debugCollider.localScale = resultingBounds.size;
@@ -174,12 +174,12 @@ public class ARObjectLoader : MonoBehaviour
 
     public void LoadTextures(string allPath)
     {
-#if DEVELOPMENT_BUILD
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
         Debug.Log($"loading textures from path {allPath}");
 #endif
         lastTexPath = allPath;
 
-#if DEVELOPMENT_BUILD
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
         if (!SpawnedObject)
             Debug.LogError("spawnedObject nullpo on texture loading");
 #endif
@@ -214,7 +214,7 @@ public class ARObjectLoader : MonoBehaviour
                     } // Поиск BaseColor для материала
                     else if (maps[k].Contains(materialPrefix + "_Normal"))
                     {
-                        var normalMap = LoadTextureData(maps[k]);
+                        var normalMap = LoadNormalData(maps[k]);
                         material.SetTexture("_BumpMap", normalMap);
                         //maps.RemoveAt(k);
                         loadedTex++;
@@ -241,7 +241,7 @@ public class ARObjectLoader : MonoBehaviour
                         loadedTex++;
                         //Debug.Log("_MetallicGlossMap: successful");
                     } // Поиск _MetallicGlossMap для материала
-                    else if (maps[k].Contains(materialPrefix + "_OcclusionMap"))
+                    else if (maps[k].Contains(materialPrefix + "_AO"))
                     {
                         var OcclusionMap = LoadTextureData(maps[k]);
                         material.SetTexture("_OcclusionMap", OcclusionMap);
@@ -292,9 +292,10 @@ public class ARObjectLoader : MonoBehaviour
         {
             fileData = File.ReadAllBytes(filePath);
             tex = new Texture2D(2, 2);
+            
             if(!tex.LoadImage(fileData)) //..this will auto-resize the texture dimensions.
             {
-#if DEVELOPMENT_BUILD
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
                 Debug.LogError($"failed to load texture from path: {filePath}");
 #endif
             }
@@ -305,12 +306,33 @@ public class ARObjectLoader : MonoBehaviour
         return tex;
     }
 
+    public static Texture2D LoadNormalData(string filePath)
+    {
+            Texture2D loadedNormalMap = LoadTextureData(filePath);
+            // note format is now copied from the loaded texture
+            Texture2D convertedNormalMap = new Texture2D(loadedNormalMap.width, loadedNormalMap.height, loadedNormalMap.format, true, true);
+
+            // the documentation on this function says it's GPU side only, but this is a lie
+            // this is roughly equivalent to:
+            // convertedNormalMap.SetPixels32(loadedNormalMap.GetPixels32(0), 0);
+            // if both textures are readable on the CPU, which they will be in this case
+            Graphics.CopyTexture(loadedNormalMap, convertedNormalMap);
+
+            convertedNormalMap.Apply();
+
+
+
+        return convertedNormalMap;
+
+    }
+
+
     float Round1Digit(float value)
     {
         return Mathf.Round(value * 10) / 10;
     }
 
-#if DEVELOPMENT_BUILD
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
     public void DebugReloadModel()
     {
         ClearObject();
