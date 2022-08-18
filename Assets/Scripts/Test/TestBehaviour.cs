@@ -35,12 +35,21 @@ public class TestBehaviour : MonoBehaviour
         {
             //load texture
             Debug.Log($"Emulating <load texture> call from flutter");
-            messages.LoadTexture(testFolderDir + @"tex\Leather_BaseColor.jpg");
-            messages.LoadTexture(testFolderDir + @"tex\Leather_Normal.jpg");
-            messages.LoadTexture(testFolderDir + @"tex\Leather_AO.jpg");
+            string fullpath = string.Join(", ",
+                testFolderDir + @"tex\Leather_BaseColor.jpg",
+                testFolderDir + @"tex\Leather_Normal.jpg",
+                testFolderDir + @"tex\Leather_AO.jpg",
+                testFolderDir + @"tex\Wood_BaseColor.jpg",
+                testFolderDir + @"tex\Wood_Normal.jpg"
+                );
 
-            messages.LoadTexture(testFolderDir + @"tex\Wood_BaseColor.jpg");
-            messages.LoadTexture(testFolderDir + @"tex\Wood_Normal.jpg");
+            messages.LoadTexture(fullpath);
+           // messages.LoadTexture(testFolderDir + @"tex\Leather_BaseColor.jpg");
+            //messages.LoadTexture(testFolderDir + @"tex\Leather_Normal.jpg");
+           // messages.LoadTexture(testFolderDir + @"tex\Leather_AO.jpg");
+
+           // messages.LoadTexture(testFolderDir + @"tex\Wood_BaseColor.jpg");
+           // messages.LoadTexture(testFolderDir + @"tex\Wood_Normal.jpg");
            // messages.LoadTexture(testFolderDir + @"tex\Leather_AO.jpg");
             //messages.LoadTexture(testFolderDir + @"tex\Leather_Rough.jpg");
 

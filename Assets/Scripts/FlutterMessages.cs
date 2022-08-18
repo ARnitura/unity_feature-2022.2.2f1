@@ -42,8 +42,9 @@ public class FlutterMessages : MonoBehaviour
         objectLoader.ClearObject();
         aRPlaneManager.enabled = true;
         // aRPlaneManager.trackables.
-        
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
         Debug.LogWarning("Start AR call");
+#endif
     }
 
     public void ClearAR() // USED FROM FLUTTER
@@ -67,12 +68,15 @@ public class FlutterMessages : MonoBehaviour
         aRPlaneManager.enabled = false;
         Application.targetFrameRate = 5;
         //StartAR();
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
         Debug.LogWarning("Clear AR call");
+#endif
     }
 
 
     [SerializeField]
-    TextMeshProUGUI debugText; 
+    TextMeshProUGUI debugText;
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
     private void Update()
     {
 
@@ -80,7 +84,7 @@ public class FlutterMessages : MonoBehaviour
         debugText.text = $"AR Plane Detection: <color=#{planeDetectionColor}>{aRPlaneManager.enabled}</color>\n" +
                          $"AR Plane trackables: {aRPlaneManager.trackables.count}";
     }
-
+#endif
     public void LoadModel(string filePath)
     {
         objectLoader.LoadModel(filePath);
@@ -88,6 +92,6 @@ public class FlutterMessages : MonoBehaviour
 
     public void LoadTexture(string allPath)
     {
-        objectLoader.LoadTextures(allPath);
+        objectLoader.StartCoroutine(objectLoader.LoadTextures(allPath));
     }
 }

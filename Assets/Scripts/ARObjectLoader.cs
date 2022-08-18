@@ -14,12 +14,15 @@ public class ARObjectLoader : MonoBehaviour
     [SerializeField]
     Transform debugModelPrefab;
 
+
+    [SerializeField]
+    Transform shadowPlanePrefab;
     //spawned object
     public Transform SpawnedObject {
         get;
         private set; 
     }
-
+    [SerializeField]
     AssetLoaderOptions assetLoaderOptions; 
     //private Transform spawnedObjectInstance;
 
@@ -39,11 +42,13 @@ public class ARObjectLoader : MonoBehaviour
     [SerializeField]
     Transform axisDebugPrefab;
 
+    MeshRenderer[] meshRenderers;
+
+    [SerializeField]
+    Material referenceMaterial;
 
     private void Start()
     {
-        assetLoaderOptions = AssetLoader.CreateDefaultLoaderOptions();
-        //spawnedObject = new GameObject("modelDummy");
     }
 
     public void ClearObject()
@@ -52,7 +57,6 @@ public class ARObjectLoader : MonoBehaviour
             Destroy(SpawnedObject.gameObject);
         #if DEVELOPMENT_BUILD || UNITY_EDITOR
         else
-            
             Debug.LogWarning("Warning: Trying to clear empty scene!");
         #endif
     }
@@ -66,25 +70,17 @@ public class ARObjectLoader : MonoBehaviour
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
         Debug.Log($"loading model from {filePath}");
 #endif
-        /*
-        AssetLoaderContext loadedModel = AssetLoader.LoadModelFromFileNoThread(filePath, null, null, assetLoaderOptions);
-        spawnedObject = loadedModel.RootGameObject.gameObject;
-        meshRenderers = spawnedObject.GetComponentsInChildren<MeshRenderer>();
-        CreateBoxCollider();
-        spawnedObject.SetActive(false);
-        GetComponent<UnityMessageManager>().SendMessageToFlutter("Модель поставлена");
-        Debug.LogWarning($"Model loaded GO_name= {spawnedObject.name}");
-        */
+
         AssetLoader.LoadModelFromFile(filePath, 
             null,
             delegate (AssetLoaderContext assetLoaderContext)
             {
 
             SpawnedObject = assetLoaderContext.RootGameObject.gameObject.transform;
-                
 
             CreateBoxCollider();
-            CreateAxisSizes();
+            CreateAxisSizesAndShadowPlane();
+            
             
             GetComponent<UnityMessageManager>().SendMessageToFlutter("Модель поставлена");
             
@@ -97,12 +93,14 @@ public class ARObjectLoader : MonoBehaviour
         
     }
 
-    void CreateAxisSizes()
+    void CreateAxisSizesAndShadowPlane()
     {
         //create up axis
         Transform upAxis = Instantiate(axisPrefab);
         Transform rightAxis = Instantiate(axisPrefab);
         Transform forwardAxis = Instantiate(axisPrefab);
+
+        Transform shadowPlane = Instantiate(shadowPlanePrefab);
 
         BoxCollider modelCollider = SpawnedObject.gameObject.GetComponent<BoxCollider>();
 
@@ -133,6 +131,10 @@ public class ARObjectLoader : MonoBehaviour
         forwardAxis.SetParent(SpawnedObject);
         rightAxis.SetParent(SpawnedObject);
 
+        shadowPlane.position = SpawnedObject.position + modelCollider.center + Vector3.down * colliderSize.y / 1.98f;
+
+        shadowPlane.SetParent(SpawnedObject);
+
     }
     void CreateBoxCollider()
     {
@@ -145,7 +147,7 @@ public class ARObjectLoader : MonoBehaviour
         SpawnedObject.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
         Bounds resultingBounds = new Bounds(SpawnedObject.transform.position, Vector3.zero);
 
-        MeshRenderer[] meshRenderers = SpawnedObject.GetComponentsInChildren<MeshRenderer>();
+        meshRenderers = SpawnedObject.GetComponentsInChildren<MeshRenderer>();
         foreach (MeshRenderer renderer in meshRenderers)
             resultingBounds.Encapsulate(renderer.bounds);
         
@@ -172,7 +174,7 @@ public class ARObjectLoader : MonoBehaviour
 #endif
     }
 
-    public void LoadTextures(string allPath)
+    public IEnumerator LoadTextures(string allPath)
     {
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
         Debug.Log($"loading textures from path {allPath}");
@@ -184,105 +186,68 @@ public class ARObjectLoader : MonoBehaviour
             Debug.LogError("spawnedObject nullpo on texture loading");
 #endif
 
-        MeshRenderer[] meshRenderers = SpawnedObject.GetComponentsInChildren<MeshRenderer>();
-        //Debug.Log($"got mesh renderers list");
 
-        List<string> maps = allPath.Split(", ").ToList(); // Карты для мешей
 
-        int mapCount = allPath.Split(", ").Count();
+
+        //load all maps
+        List<Texture2DInfo> textures = GetTexturesFromCombinedPath(allPath);
+        int mapCount = textures.Count();
         int loadedTex = 0;
+
+        //copy material properties from ref material
+        foreach (var renderer in meshRenderers)
+            foreach (var material in renderer.materials)
+                material.CopyPropertiesFromMaterial(referenceMaterial);
+
+
+        //skip the frame to apply material properties
+        yield return null;
+
+        //do something reasonable with this bycycle
         foreach (var renderer in meshRenderers)
         {
-            //Debug.Log($"trying renderer on {renderer.gameObject.name}");
             foreach (var material in renderer.materials)
             {
-                //Debug.Log($"trying material {material.name}");
-                // Debug.Log("check2");
-                
-                //Debug.Log("check3");
-                for (int k = 0; k < maps.Count; k++) // Распределение текстур относительно материалов
+                for (int k = 0; k < textures.Count; k++)
                 {
-                    string materialPrefix = material.name.Split(".")[0];
-                    //Debug.Log($"trying to fill material with name {materialPrefix}");
-                    if (maps[k].Contains(materialPrefix + "_BaseColor"))
-                    {
-                        var BaseColor = LoadTextureData(maps[k]);
-                        material.SetTexture("_MainTex", BaseColor);
-                        //maps.RemoveAt(k);
-                        loadedTex++;
-                        //Debug.Log("_MainTex: successful");
-                    } // Поиск BaseColor для материала
-                    else if (maps[k].Contains(materialPrefix + "_Normal"))
-                    {
-                        var normalMap = LoadNormalData(maps[k]);
-                        material.SetTexture("_BumpMap", normalMap);
-                        //maps.RemoveAt(k);
-                        loadedTex++;
-                        //Debug.Log("_BumpMap: successful");
-                    } // Поиск Normal для материала
+                    string materialPrefix = material.name.Split('.')[0];
 
-
-                    // we don't need heightmaps
-                    /*
-                    else if (maps[k].Contains(find_material + "_Height"))
+                    if (textures[k].Path.Contains(materialPrefix + "_BaseColor"))
                     {
-                        var HeightMap = LoadTextureData(maps[k]);
-                        comp.material.SetTexture("_Height", HeightMap);
-                        maps.RemoveAt(k);
-                        Debug.Log("_Height: successful");
-                    } // Поиск HeightMap для материала
-                    */
-
-                    else if (maps[k].Contains(materialPrefix + "_MetallicGlossMap"))
-                    {
-                        var MetallicGlossMap = LoadTextureData(maps[k]);
-                        material.SetTexture("_MetallicGlossMap", MetallicGlossMap);
-                        //maps.RemoveAt(k);
+                        material.SetTexture("_MainTex", textures[k].Texture);
                         loadedTex++;
-                        //Debug.Log("_MetallicGlossMap: successful");
-                    } // Поиск _MetallicGlossMap для материала
-                    else if (maps[k].Contains(materialPrefix + "_AO"))
-                    {
-                        var OcclusionMap = LoadTextureData(maps[k]);
-                        material.SetTexture("_OcclusionMap", OcclusionMap);
-                        //maps.RemoveAt(k);
-                        loadedTex++;
-                        //Debug.Log("_OcclusionMap: successful");
-                    } // Поиск _OcclusionMap для материала
-                    else if (maps[k].Contains(materialPrefix + "_EmissionMap"))
-                    {
-                        var EmissionMap = LoadTextureData(maps[k]);
-                        material.SetTexture("_EmissionMap", EmissionMap);
-                        //maps.RemoveAt(k);
-                        loadedTex++;
-                        //Debug.Log("_EmissionMap: successful");
-                    } // Поиск _EmissionMap для материала
-
-
-                    // we already have glossiness in metallic map
-                    /*
-                    else if (maps[k].Contains(find_material + "_Glossiness"))
-                    {
-                        var GlossinessMap = LoadTextureData(maps[k]);
-                        comp.material.SetTexture("_Glossiness", GlossinessMap);
-                        maps.RemoveAt(k);
-                        Debug.Log("_Glossiness: successful");
                     }
-                    */
+                    else if (textures[k].Path.Contains(materialPrefix + "_Normal"))
+                    {
+                        material.SetTexture("_BumpMap", textures[k].Texture);
+                        loadedTex++;
+                    }
+                    else if (textures[k].Path.Contains(materialPrefix + "_MetallicGlossMap"))
+                    {
+                        material.SetTexture("_MetallicGlossMap", textures[k].Texture);
+                        loadedTex++;
+                    } 
+                    else if (textures[k].Path.Contains(materialPrefix + "_AO"))
+                    {
+                        material.SetTexture("_OcclusionMap", textures[k].Texture);
+                        loadedTex++;
+                    }
+                    else if (textures[k].Path.Contains(materialPrefix + "_EmissionMap"))
+                    {
+                        material.SetTexture("_EmissionMap", textures[k].Texture);
+                        loadedTex++;
+                    }
                 }
             }
-
-            // EXAMPLE: LoadTexture(["Wood_BaseColor"])
         }
-#if DEVELOPMENT_BUILD
+
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
         if (loadedTex != mapCount)
             Debug.LogWarning($"Loaded {loadedTex}/{mapCount} textures");
         else
             Debug.Log("Tex loading complete");
 #endif
     }
-
-
     public static Texture2D LoadTextureData(string filePath)
     {
         Texture2D tex = null;
@@ -326,6 +291,19 @@ public class ARObjectLoader : MonoBehaviour
 
     }
 
+    public static List<Texture2DInfo> GetTexturesFromCombinedPath(string allPath)
+    {
+        List<Texture2DInfo> result = new List<Texture2DInfo>();
+        List<string> maps = allPath.Split(", ").ToList();
+        for (int i = 0; i < maps.Count; i++)
+        {
+            if (maps[i].Contains("_Normal"))
+                result.Add(new Texture2DInfo(LoadNormalData(maps[i]), maps[i]));
+            else 
+                result.Add(new Texture2DInfo(LoadTextureData(maps[i]), maps[i]));
+        }
+        return result;
+    }
 
     float Round1Digit(float value)
     {
@@ -341,16 +319,16 @@ public class ARObjectLoader : MonoBehaviour
     public void DebugReloadTextures()
     {
         if (SpawnedObject != null)
-            LoadTextures(lastTexPath);
+            StartCoroutine(LoadTextures(lastTexPath));
         else
             Debug.LogError("Tried to load textures before loading model");
     }
 
     public void DebugStandaloneLoadModel()
     {
-        SpawnedObject = Instantiate(debugModelPrefab);
+        SpawnedObject = Instantiate(debugModelPrefab, Vector3.zero, Quaternion.identity);
         CreateBoxCollider();
-        CreateAxisSizes();
+        CreateAxisSizesAndShadowPlane();
         SpawnedObject.gameObject.SetActive(false);
     }
 #endif
