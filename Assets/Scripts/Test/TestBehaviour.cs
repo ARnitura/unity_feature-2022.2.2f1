@@ -1,7 +1,7 @@
-#if UNITY_EDITOR
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using TMPro;
 using UnityEngine;
 
 public class TestBehaviour : MonoBehaviour
@@ -9,7 +9,11 @@ public class TestBehaviour : MonoBehaviour
     [SerializeField]
     FlutterMessages messages;
 
+    [SerializeField]
+    TextMeshProUGUI fpsText; 
+
     string testFolderDir;
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
     private void Start()
     {
         
@@ -17,6 +21,8 @@ public class TestBehaviour : MonoBehaviour
         Debug.Log(Application.dataPath);
         Debug.Log(Directory.GetParent(Application.dataPath).FullName);
         Debug.Log(testFolderDir);
+
+        InvokeRepeating(nameof(GetFPS), 0.25f, 0.25f);
     }
 
     
@@ -62,6 +68,10 @@ public class TestBehaviour : MonoBehaviour
             
         }
     }
-}
 
+    void GetFPS()
+    {
+        fpsText.text = $"{(int)(1f/Time.unscaledDeltaTime)} fps";
+    }
 #endif
+}

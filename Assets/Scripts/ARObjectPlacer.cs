@@ -122,6 +122,10 @@ public class ARObjectPlacer : MonoBehaviour
         objectPlaced = true;
     }
 
+
+    Vector2 touchLockPos;
+    Vector3 currentVelocity;
+    float touchLockY;
     void ProcessMovement()
     {
 
@@ -169,6 +173,8 @@ public class ARObjectPlacer : MonoBehaviour
                         if (hitInfo.collider.transform == objectLoader.SpawnedObject)
                         {
                             touchLock = true;
+                            touchLockPos = touch.position;
+                            touchLockY = objectLoader.SpawnedObject.position.y;
                         }
                     }
                 }
@@ -178,14 +184,37 @@ public class ARObjectPlacer : MonoBehaviour
             if (touchLock)
             {
                 //move
-                if (touch.phase == TouchPhase.Moved && isRotating == false)
+                //if (touch.phase == TouchPhase.Moved && isRotating == false)
+                if (isRotating == false)
                 {
+                    /*Raycast movement
                     //Debug.Log("Move model");
 
                     //get object and transform position
                     m_RaycastManager.Raycast(touchPosition, s_Hits, TrackableType.Planes);
                     selectedObject = objectLoader.SpawnedObject.gameObject;
                     selectedObject.transform.position = s_Hits[0].pose.position;
+                    */
+
+                    /* Simple movement
+                    Vector2 deltaMove = touch.position - touchLockPos;
+                    Vector3 projectedCameraForward = Vector3.ProjectOnPlane(ARCamera.transform.forward, Vector3.up);
+                    Vector3 rightDirection = -Vector3.Cross(projectedCameraForward, Vector3.up);
+                    objectLoader.SpawnedObject.position += projectedCameraForward * touch.deltaPosition.y * 0.001f + rightDirection * touch.deltaPosition.x * 0.001f;
+                    */
+
+                    //cool movement?
+                    Vector3 screenPosition = new Vector3(touch.position.x, touch.position.y, (objectLoader.SpawnedObject.position - ARCamera.transform.position).magnitude);
+                    Vector3 projectedScreen = ARCamera.ScreenToWorldPoint(screenPosition);
+                    Vector3 projectedPosition = new Vector3(projectedScreen.x, objectLoader.SpawnedObject.position.y, projectedScreen.z);
+                    Vector3 clampedPosition = Vector3.ClampMagnitude(projectedPosition, 5);
+                    clampedPosition.y = touchLockY;
+
+                    objectLoader.SpawnedObject.position = Vector3.SmoothDamp(objectLoader.SpawnedObject.position, clampedPosition, ref currentVelocity, 0.05f);
+
+
+
+
                 }
 
 
