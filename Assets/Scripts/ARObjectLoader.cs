@@ -82,7 +82,7 @@ public class ARObjectLoader : MonoBehaviour
             CreateAxisSizesAndShadowPlane();
             
             
-            GetComponent<UnityMessageManager>().SendMessageToFlutter("Модель поставлена");
+            GetComponent<UnityMessageManager>().SendMessageToFlutter("ar_model_loaded");
             
             SpawnedObject.gameObject.SetActive(false);
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
@@ -119,9 +119,10 @@ public class ARObjectLoader : MonoBehaviour
         forwardAxis.rotation = Quaternion.Euler(90, 0, 90);
         rightAxis.rotation = Quaternion.Euler(90, 0, 0);
 
-        upAxis.GetComponentInChildren<SpriteRenderer>().size = new Vector2(colliderSize.y, 0.5f);
-        forwardAxis.GetComponentInChildren<SpriteRenderer>().size = new Vector2(colliderSize.z, 0.5f);
-        rightAxis.GetComponentInChildren<SpriteRenderer>().size = new Vector2(colliderSize.x, 0.5f);
+        //omg just invent something better, bc it is not stable and depends on texture dimensions
+        upAxis.GetComponentInChildren<SpriteRenderer>().size = new Vector2(colliderSize.y*2, 1f);
+        forwardAxis.GetComponentInChildren<SpriteRenderer>().size = new Vector2(colliderSize.z*2, 1f);
+        rightAxis.GetComponentInChildren<SpriteRenderer>().size = new Vector2(colliderSize.x*2, 1f);
 
         upAxis.GetComponentInChildren<TextMeshPro>().text = $"{Round1Digit(colliderSize.y*100)} cm";
         forwardAxis.GetComponentInChildren<TextMeshPro>().text = $"{Round1Digit(colliderSize.z * 100)} cm";
