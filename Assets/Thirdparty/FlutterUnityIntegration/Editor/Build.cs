@@ -173,6 +173,12 @@ public class Build : EditorWindow
         BuildIOS(iosExportPath);
     }
 
+    [MenuItem("Flutter/Export IOS (Debug) %&i", false, 3)]
+    public static void DoBuildIOSDebug()
+    {
+        BuildIOSDebug(iosExportPath);
+    }
+
     [MenuItem("Flutter/Export IOS Plugin %&o", false, 4)]
     public static void DoBuildIOSPlugin()
     {
@@ -218,7 +224,27 @@ public class Build : EditorWindow
         EditorUserBuildSettings.iOSXcodeBuildConfig = XcodeBuildConfig.Release;
 
 
-        var options = BuildOptions.AllowDebugging;
+        var options = BuildOptions.None;
+
+        var report = BuildPipeline.BuildPlayer(
+            GetEnabledScenes(),
+            path,
+            BuildTarget.iOS,
+            options
+        );
+
+        if (report.summary.result != BuildResult.Succeeded)
+            throw new Exception("Build failed");
+    }
+    private static void BuildIOSDebug(String path)
+    {
+        if (Directory.Exists(path))
+            Directory.Delete(path, true);
+
+        EditorUserBuildSettings.iOSXcodeBuildConfig = XcodeBuildConfig.Release;
+
+
+        var options = BuildOptions.Development | BuildOptions.CompressWithLz4 | BuildOptions.AllowDebugging;
 
         var report = BuildPipeline.BuildPlayer(
             GetEnabledScenes(),
