@@ -8,6 +8,9 @@ using TriLibCore;
 using TriLibCore.General;
 using UnityEditor;
 using UnityEngine.XR.ARFoundation;
+#if UNITY_IOS
+using UnityEngine.XR.ARKit;
+#endif
 using TMPro;
 
 public class FlutterMessages : MonoBehaviour
