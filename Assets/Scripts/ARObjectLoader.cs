@@ -51,6 +51,8 @@ public class ARObjectLoader : MonoBehaviour
     {
     }
 
+    
+    [Obsolete("No need in calling that - LoadModel clears old model if necessary")]
     public void ClearObject()
     {
         if (SpawnedObject)
@@ -64,6 +66,9 @@ public class ARObjectLoader : MonoBehaviour
 
     public void LoadModel(string filePath)
     {
+        if (SpawnedObject != null)
+            Destroy(SpawnedObject.gameObject);
+
         lastModelPath = filePath;
 
 
@@ -223,21 +228,30 @@ public class ARObjectLoader : MonoBehaviour
                         material.SetTexture("_BumpMap", textures[k].Texture);
                         loadedTex++;
                     }
+                    else if (textures[k].Path.Contains(materialPrefix + "_Specular"))
+                    {
+                        material.SetTexture("_SpecGlossMap", textures[k].Texture);
+                        loadedTex++;
+                    }
+                    /*
                     else if (textures[k].Path.Contains(materialPrefix + "_MetallicGlossMap"))
                     {
                         material.SetTexture("_MetallicGlossMap", textures[k].Texture);
                         loadedTex++;
                     } 
+                    */
                     else if (textures[k].Path.Contains(materialPrefix + "_AO"))
                     {
                         material.SetTexture("_OcclusionMap", textures[k].Texture);
                         loadedTex++;
                     }
+                    /*
                     else if (textures[k].Path.Contains(materialPrefix + "_EmissionMap"))
                     {
                         material.SetTexture("_EmissionMap", textures[k].Texture);
                         loadedTex++;
                     }
+                    */
                 }
             }
         }

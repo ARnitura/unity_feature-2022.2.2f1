@@ -35,6 +35,9 @@ public class FlutterMessages : MonoBehaviour
 
     public void StartAR()
     {
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+        Debug.LogWarning("Start AR call");
+#endif
 
         Application.targetFrameRate = 60;
         session.subsystem.Start();
@@ -45,13 +48,16 @@ public class FlutterMessages : MonoBehaviour
         objectLoader.ClearObject();
         aRPlaneManager.enabled = true;
         // aRPlaneManager.trackables.
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
-        Debug.LogWarning("Start AR call");
-#endif
+
     }
 
     public void ClearAR() // USED FROM FLUTTER
     {
+
+        //StartAR();
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+        Debug.LogWarning("Clear AR call");
+#endif
 
 #if UNITY_IOS
         if (session.subsystem is ARKitSessionSubsystem subsystem)
@@ -70,31 +76,45 @@ public class FlutterMessages : MonoBehaviour
         objectLoader.ClearObject();
         aRPlaneManager.enabled = false;
         Application.targetFrameRate = 5;
-        //StartAR();
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
-        Debug.LogWarning("Clear AR call");
-#endif
+
     }
 
-
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
     [SerializeField]
     TextMeshProUGUI debugText;
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#endif
+
+    
     private void Update()
     {
-
+#if !DEVELOPMENT_BUILD && !UNITY_EDITOR
         string planeDetectionColor = aRPlaneManager.enabled? ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
         debugText.text = $"AR Plane Detection: <color=#{planeDetectionColor}>{aRPlaneManager.enabled}</color>\n" +
                          $"AR Plane trackables: {aRPlaneManager.trackables.count}";
-    }
 #endif
+    }
+
+
+    float lastModelLoadCallTime = -2;
     public void LoadModel(string filePath)
     {
-        objectLoader.LoadModel(filePath);
+        //bycycle for multiple model loading
+        if (Time.unscaledTime >= lastModelLoadCallTime + 1)
+        {
+            objectLoader.LoadModel(filePath);
+            lastModelLoadCallTime = Time.unscaledTime;
+        }
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+        else
+        {
+            Debug.LogWarning("Blocked extra loadmodel call");
+        }
+#endif
     }
 
     public void LoadTexture(string allPath)
     {
+        //todo: better async await 
         objectLoader.StartCoroutine(objectLoader.LoadTextures(allPath));
     }
 }
