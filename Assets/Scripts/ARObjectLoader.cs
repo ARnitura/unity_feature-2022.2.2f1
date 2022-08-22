@@ -47,9 +47,9 @@ public class ARObjectLoader : MonoBehaviour
     [SerializeField]
     Material referenceMaterial;
 
-    private void Start()
-    {
-    }
+    [SerializeField]
+    bool rulerEnabled = false;
+    Transform rulerRoot;
 
     
     [Obsolete("No need in calling that - LoadModel clears old model if necessary")]
@@ -63,10 +63,15 @@ public class ARObjectLoader : MonoBehaviour
         #endif
     }
 
+    public void SwitchRuler()
+    {
+        rulerEnabled = !rulerEnabled;
+        rulerRoot.gameObject.SetActive(rulerEnabled);
+    }
 
     public void LoadModel(string filePath)
     {
-        if (SpawnedObject != null)
+        if (SpawnedObject)
             Destroy(SpawnedObject.gameObject);
 
         lastModelPath = filePath;
@@ -100,10 +105,16 @@ public class ARObjectLoader : MonoBehaviour
 
     void CreateAxisSizesAndShadowPlane()
     {
+
+
+        rulerRoot = new GameObject("RulerRoot").transform;
+        rulerRoot.position = SpawnedObject.position;
+        rulerRoot.SetParent(SpawnedObject);
+
         //create up axis
-        Transform upAxis = Instantiate(axisPrefab);
-        Transform rightAxis = Instantiate(axisPrefab);
-        Transform forwardAxis = Instantiate(axisPrefab);
+        Transform upAxis = Instantiate(axisPrefab,rulerRoot);
+        Transform rightAxis = Instantiate(axisPrefab, rulerRoot);
+        Transform forwardAxis = Instantiate(axisPrefab, rulerRoot);
 
         Transform shadowPlane = Instantiate(shadowPlanePrefab);
 
@@ -140,6 +151,8 @@ public class ARObjectLoader : MonoBehaviour
         shadowPlane.position = SpawnedObject.position + modelCollider.center + Vector3.down * colliderSize.y / 1.98f;
 
         shadowPlane.SetParent(SpawnedObject);
+
+        rulerRoot.gameObject.SetActive(rulerEnabled);
 
     }
     void CreateBoxCollider()

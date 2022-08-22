@@ -28,6 +28,7 @@ public class TestBehaviour : MonoBehaviour
     
     void Update()
     {
+
         if(Input.GetKeyDown(KeyCode.Q))
         {
             //load model

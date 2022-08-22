@@ -101,6 +101,9 @@ public class FlutterMessages : MonoBehaviour
         //bycycle for multiple model loading
         if (Time.unscaledTime >= lastModelLoadCallTime + 1)
         {
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+            Debug.Log($"got loadmodel call at {Time.unscaledTime}");
+#endif
             objectLoader.LoadModel(filePath);
             lastModelLoadCallTime = Time.unscaledTime;
         }
