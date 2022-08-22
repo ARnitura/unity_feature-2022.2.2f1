@@ -21,6 +21,7 @@ public class TestBehaviour : MonoBehaviour
         //Debug.Log(Application.dataPath);
         //Debug.Log(Directory.GetParent(Application.dataPath).FullName);
         //Debug.Log(testFolderDir);
+        StartCoroutine(fpsOutput());
     }
 
     IEnumerator fpsOutput()

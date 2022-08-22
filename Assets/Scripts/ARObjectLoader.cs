@@ -51,7 +51,7 @@ public class ARObjectLoader : MonoBehaviour
     bool rulerEnabled = false;
     Transform rulerRoot;
 
-    
+
     [Obsolete("No need in calling that - LoadModel clears old model if necessary")]
     public void ClearObject()
     {
@@ -67,6 +67,9 @@ public class ARObjectLoader : MonoBehaviour
     {
         rulerEnabled = !rulerEnabled;
         rulerRoot.gameObject.SetActive(rulerEnabled);
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+        Debug.LogWarning("Ruler " + (rulerEnabled? "on" : "off"));
+#endif
     }
 
     public void LoadModel(string filePath)
@@ -80,7 +83,7 @@ public class ARObjectLoader : MonoBehaviour
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
         Debug.Log($"loading model from {filePath}");
 #endif
-
+        
         AssetLoader.LoadModelFromFile(filePath, 
             null,
             delegate (AssetLoaderContext assetLoaderContext)
@@ -91,8 +94,7 @@ public class ARObjectLoader : MonoBehaviour
             CreateBoxCollider();
             CreateAxisSizesAndShadowPlane();
             
-            
-            GetComponent<UnityMessageManager>().SendMessageToFlutter("ar_model_loaded");
+            UnityMessageManager.Instance.SendMessageToFlutter("ar_model_loaded");
             
             SpawnedObject.gameObject.SetActive(false);
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
@@ -112,9 +114,11 @@ public class ARObjectLoader : MonoBehaviour
         rulerRoot.SetParent(SpawnedObject);
 
         //create up axis
-        Transform upAxis = Instantiate(axisPrefab,rulerRoot);
-        Transform rightAxis = Instantiate(axisPrefab, rulerRoot);
-        Transform forwardAxis = Instantiate(axisPrefab, rulerRoot);
+        Transform upAxis = Instantiate(axisPrefab);
+        Transform rightAxis = Instantiate(axisPrefab);
+        Transform forwardAxis = Instantiate(axisPrefab);
+
+
 
         Transform shadowPlane = Instantiate(shadowPlanePrefab);
 
@@ -144,9 +148,9 @@ public class ARObjectLoader : MonoBehaviour
         forwardAxis.GetComponentInChildren<TextMeshPro>().text = $"{Round1Digit(colliderSize.z * 100)} cm";
         rightAxis.GetComponentInChildren<TextMeshPro>().text = $"{Round1Digit(colliderSize.x * 100)} cm";
 
-        upAxis.SetParent(SpawnedObject);
-        forwardAxis.SetParent(SpawnedObject);
-        rightAxis.SetParent(SpawnedObject);
+        upAxis.SetParent(rulerRoot);
+        rightAxis.SetParent(rulerRoot);
+        forwardAxis.SetParent(rulerRoot);
 
         shadowPlane.position = SpawnedObject.position + modelCollider.center + Vector3.down * colliderSize.y / 1.98f;
 
@@ -216,7 +220,10 @@ public class ARObjectLoader : MonoBehaviour
         //copy material properties from ref material
         foreach (var renderer in meshRenderers)
             foreach (var material in renderer.materials)
+            {
+                material.shader = Shader.Find("Standard (Specular setup)");
                 material.CopyPropertiesFromMaterial(referenceMaterial);
+            }
 
 
         //skip the frame to apply material properties
@@ -354,10 +361,12 @@ public class ARObjectLoader : MonoBehaviour
 
     public void DebugStandaloneLoadModel()
     {
+        
         SpawnedObject = Instantiate(debugModelPrefab, Vector3.zero, Quaternion.identity);
         CreateBoxCollider();
         CreateAxisSizesAndShadowPlane();
         SpawnedObject.gameObject.SetActive(false);
+        Debug.LogWarning("Loaded model from resources");
     }
 #endif
 }

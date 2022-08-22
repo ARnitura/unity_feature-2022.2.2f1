@@ -4,7 +4,7 @@ using System.IO;
 using TriLibCore;
 using UnityEngine;
 using UnityEngine.Events;
-
+using UnityEngine.EventSystems;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
 
@@ -52,7 +52,7 @@ public class ARObjectPlacer : MonoBehaviour
     void Awake()
     {
         // loadModel(testPath);
-
+        
         m_RaycastManager = GetComponent<ARRaycastManager>();
         aRPlaneManager = GetComponent<ARPlaneManager>();
 
@@ -78,6 +78,11 @@ public class ARObjectPlacer : MonoBehaviour
     {
         if (objectLoader.SpawnedObject == null)
             return;
+
+        foreach (Touch touch in Input.touches)
+            if (EventSystem.current.IsPointerOverGameObject(touch.fingerId))
+                return;
+
 
         if (!TryGetTouchPosition(out Vector2 touchPosition))
             return;
