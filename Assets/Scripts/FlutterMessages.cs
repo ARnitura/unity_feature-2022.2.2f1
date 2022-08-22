@@ -87,7 +87,7 @@ public class FlutterMessages : MonoBehaviour
     
     private void Update()
     {
-#if !DEVELOPMENT_BUILD && !UNITY_EDITOR
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
         string planeDetectionColor = aRPlaneManager.enabled? ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
         debugText.text = $"AR Plane Detection: <color=#{planeDetectionColor}>{aRPlaneManager.enabled}</color>\n" +
                          $"AR Plane trackables: {aRPlaneManager.trackables.count}";
@@ -95,24 +95,9 @@ public class FlutterMessages : MonoBehaviour
     }
 
 
-    float lastModelLoadCallTime = -2;
     public void LoadModel(string filePath)
     {
-        //bycycle for multiple model loading
-        if (Time.unscaledTime >= lastModelLoadCallTime + 1)
-        {
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
-            Debug.Log($"got loadmodel call at {Time.unscaledTime}");
-#endif
-            objectLoader.LoadModel(filePath);
-            lastModelLoadCallTime = Time.unscaledTime;
-        }
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
-        else
-        {
-            Debug.LogWarning("Blocked extra loadmodel call");
-        }
-#endif
+        objectLoader.LoadModel(filePath);
     }
 
     public void LoadTexture(string allPath)

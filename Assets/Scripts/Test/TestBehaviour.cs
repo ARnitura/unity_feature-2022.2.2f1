@@ -18,13 +18,20 @@ public class TestBehaviour : MonoBehaviour
     {
         
         testFolderDir = Path.Combine(Directory.GetParent(Application.dataPath).FullName, @"testFolder\");
-        Debug.Log(Application.dataPath);
-        Debug.Log(Directory.GetParent(Application.dataPath).FullName);
-        Debug.Log(testFolderDir);
-
-        InvokeRepeating(nameof(GetFPS), 0.25f, 0.25f);
+        //Debug.Log(Application.dataPath);
+        //Debug.Log(Directory.GetParent(Application.dataPath).FullName);
+        //Debug.Log(testFolderDir);
     }
 
+    IEnumerator fpsOutput()
+    {
+        while (true)
+        {
+
+            fpsText.text = $"{(int)(1f / Time.unscaledDeltaTime)} fps";
+            yield return new WaitForSeconds(0.25f);
+        }
+    }
     
     void Update()
     {
@@ -68,11 +75,6 @@ public class TestBehaviour : MonoBehaviour
             messages.ClearAR();
             
         }
-    }
-
-    void GetFPS()
-    {
-        fpsText.text = $"{(int)(1f/Time.unscaledDeltaTime)} fps";
     }
 #endif
 }
