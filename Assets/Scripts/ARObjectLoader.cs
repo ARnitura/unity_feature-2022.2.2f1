@@ -66,7 +66,7 @@ public class ARObjectLoader : MonoBehaviour
     public void SwitchRuler()
     {
         rulerEnabled = !rulerEnabled;
-        rulerRoot.gameObject.SetActive(rulerEnabled);
+        rulerRoot?.gameObject.SetActive(rulerEnabled);
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
         Debug.LogWarning("Ruler " + (rulerEnabled? "on" : "off"));
 #endif
@@ -221,7 +221,7 @@ public class ARObjectLoader : MonoBehaviour
         foreach (var renderer in meshRenderers)
             foreach (var material in renderer.materials)
             {
-                material.shader = Shader.Find("Standard (Specular setup)");
+                material.shader = referenceMaterial.shader;
                 material.CopyPropertiesFromMaterial(referenceMaterial);
             }
 

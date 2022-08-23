@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using TMPro;
 using TriLibCore;
 using UnityEngine;
 using UnityEngine.Events;
@@ -74,8 +76,34 @@ public class ARObjectPlacer : MonoBehaviour
         return false;
     }
 
+    [SerializeField]
+    TextMeshProUGUI debugText;
+
     void Update()
     {
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+        string spawnedObjectColor = objectLoader.SpawnedObject != null ? ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
+        string touchColor = ColorUtility.ToHtmlStringRGB(Color.green);
+        string touchAppliedColor = TryGetTouchPosition(out Vector2 touchPosition1)?  ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
+        bool touchUIBlock = false;
+
+        foreach (Touch touch in Input.touches)
+            if (EventSystem.current.IsPointerOverGameObject(touch.fingerId))
+            {
+                touchColor = ColorUtility.ToHtmlStringRGB(Color.red);
+                touchUIBlock = true;
+                break;
+            }
+        bool verdict = !touchUIBlock && objectLoader.SpawnedObject != null && TryGetTouchPosition(out touchPosition1);
+        string verdictColor = verdict? ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
+
+        debugText.text = $"Touch conditions:\n" +
+            $"Model loaded? <color=#{spawnedObjectColor}>{objectLoader.SpawnedObject != null}</color>\n" +
+            $"Pointer(s) is over UI? <color=#{touchColor}>{touchUIBlock}</color>\n" +
+            $"At least one touch? <color=#{touchAppliedColor}>{TryGetTouchPosition(out touchPosition1)}</color>\n" +
+            $"Can place 3d model? <color=#{verdictColor}>{verdict}</color>";
+
+#endif
         if (objectLoader.SpawnedObject == null)
             return;
 

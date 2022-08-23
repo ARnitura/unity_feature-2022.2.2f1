@@ -9,8 +9,6 @@ public class TestBehaviour : MonoBehaviour
     [SerializeField]
     FlutterMessages messages;
 
-    [SerializeField]
-    TextMeshProUGUI fpsText; 
 
     string testFolderDir;
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
@@ -21,18 +19,9 @@ public class TestBehaviour : MonoBehaviour
         //Debug.Log(Application.dataPath);
         //Debug.Log(Directory.GetParent(Application.dataPath).FullName);
         //Debug.Log(testFolderDir);
-        StartCoroutine(fpsOutput());
     }
 
-    IEnumerator fpsOutput()
-    {
-        while (true)
-        {
 
-            fpsText.text = $"{(int)(1f / Time.unscaledDeltaTime)} fps";
-            yield return new WaitForSeconds(0.25f);
-        }
-    }
     
     void Update()
     {
