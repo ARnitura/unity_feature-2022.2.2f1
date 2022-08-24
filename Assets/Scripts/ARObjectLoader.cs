@@ -85,7 +85,21 @@ public class ARObjectLoader : MonoBehaviour
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
         Debug.Log($"loading model from {filePath}");
 #endif
-        
+
+        AssetLoaderContext assetLoaderContext = AssetLoader.LoadModelFromFileNoThread(filePath, null, null, assetLoaderOptions, null);
+        SpawnedObject = assetLoaderContext.RootGameObject.gameObject.transform;
+
+        CreateBoxCollider();
+        CreateAxisSizesAndShadowPlane();
+
+        unityMessageManager.SendMessageToFlutter("ar_model_loaded");
+
+        SpawnedObject.gameObject.SetActive(false);
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+        Debug.LogWarning($"Model loaded GO_name= {SpawnedObject.name}");
+#endif
+
+        /*
         AssetLoader.LoadModelFromFile(filePath, 
             null,
             delegate (AssetLoaderContext assetLoaderContext)
@@ -104,7 +118,7 @@ public class ARObjectLoader : MonoBehaviour
 #endif
         }, 
         null, null, null, assetLoaderOptions, null);
-        
+        */
     }
 
     void CreateAxisSizesAndShadowPlane()
