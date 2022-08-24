@@ -85,9 +85,15 @@ public class ARObjectLoader : MonoBehaviour
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
         Debug.Log($"loading model from {filePath}");
 #endif
+        if (!File.Exists(filePath))
+            Debug.LogError($"there is no file on {filePath}");
 
         AssetLoaderContext assetLoaderContext = AssetLoader.LoadModelFromFileNoThread(filePath, null, null, assetLoaderOptions, null);
-        SpawnedObject = assetLoaderContext.RootGameObject.gameObject.transform;
+
+        
+        if(assetLoaderContext.RootGameObject == null)
+            Debug.LogError($"loaded root GO is null (check path to model)");
+        SpawnedObject = assetLoaderContext.RootGameObject.transform;
 
         CreateBoxCollider();
         CreateAxisSizesAndShadowPlane();
