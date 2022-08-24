@@ -51,6 +51,8 @@ public class ARObjectLoader : MonoBehaviour
     bool rulerEnabled = false;
     Transform rulerRoot;
 
+    [SerializeField]
+    UnityMessageManager unityMessageManager;
 
     [Obsolete("No need in calling that - LoadModel clears old model if necessary")]
     public void ClearObject()
@@ -94,7 +96,7 @@ public class ARObjectLoader : MonoBehaviour
             CreateBoxCollider();
             CreateAxisSizesAndShadowPlane();
             
-            UnityMessageManager.Instance.SendMessageToFlutter("ar_model_loaded");
+            unityMessageManager.SendMessageToFlutter("ar_model_loaded");
             
             SpawnedObject.gameObject.SetActive(false);
 #if DEVELOPMENT_BUILD || UNITY_EDITOR

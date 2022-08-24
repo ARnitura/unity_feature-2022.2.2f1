@@ -6337,6 +6337,7 @@ MonoBehaviour:
   axisDebugPrefab: {fileID: 590799007390098543, guid: d04eec68d7372084ea02fd6bf06ebb76, type: 3}
   referenceMaterial: {fileID: 2100000, guid: 4c0b0f0ee2760b641a6186530ced59e1, type: 2}
   rulerEnabled: 0
+  unityMessageManager: {fileID: 1207421182}
 --- !u!114 &1357211392
 MonoBehaviour:
   m_ObjectHideFlags: 0
