@@ -6,8 +6,8 @@ public class ARObjectDecorator : MonoBehaviour
     [Header("Ruler")]
     [SerializeField]
     private Transform rulerPrefab;
-    [SerializeField]
-    private bool rulerEnabled = false;
+    [field: SerializeField]
+    public bool RulerEnabled { get; private set; } = false;
     private Transform rulerRoot;
 
 
@@ -23,10 +23,10 @@ public class ARObjectDecorator : MonoBehaviour
 
     public void SwitchRuler()
     {
-        rulerEnabled = !rulerEnabled;
-        rulerRoot?.gameObject.SetActive(rulerEnabled);
+        RulerEnabled = !RulerEnabled;
+        rulerRoot?.gameObject.SetActive(RulerEnabled);
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-        Debug.LogWarning("Ruler " + (rulerEnabled ? "on" : "off"));
+        Debug.LogWarning("Ruler " + (RulerEnabled ? "on" : "off"));
 #endif
     }
 
@@ -93,7 +93,7 @@ public class ARObjectDecorator : MonoBehaviour
 
 
 
-        rulerRoot.gameObject.SetActive(rulerEnabled);
+        rulerRoot.gameObject.SetActive(RulerEnabled);
     }
 
 
