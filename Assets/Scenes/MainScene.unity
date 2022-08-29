@@ -346,6 +346,11 @@ PrefabInstance:
     m_RemovedComponents:
     - {fileID: 8297056786599749300, guid: 98c57c60d5f37d34cb0d009317bd15af, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 98c57c60d5f37d34cb0d009317bd15af, type: 3}
+--- !u!1 &60377611 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8297056788253150765, guid: 98c57c60d5f37d34cb0d009317bd15af, type: 3}
+  m_PrefabInstance: {fileID: 60377610}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &64239468
 GameObject:
   m_ObjectHideFlags: 0
@@ -3502,7 +3507,6 @@ GameObject:
   - component: {fileID: 682056378}
   - component: {fileID: 682056377}
   - component: {fileID: 682056376}
-  - component: {fileID: 682056382}
   - component: {fileID: 682056383}
   m_Layer: 0
   m_Name: AR Camera
@@ -3612,18 +3616,6 @@ Transform:
   m_Father: {fileID: 1219980862}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &682056382
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 682056374}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 01a4375621af6be4dbbde885b35b5002, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!114 &682056383
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5651,7 +5643,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3465a7875198de4dab3b28d5885e1cb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  planeMarker: {fileID: 0}
+  planeMarker: {fileID: 60377611}
   ARCamera: {fileID: 682056375}
   objectLoader: {fileID: 1357211391}
   modelRotationAxis: {x: 0, y: -1, z: 0}
