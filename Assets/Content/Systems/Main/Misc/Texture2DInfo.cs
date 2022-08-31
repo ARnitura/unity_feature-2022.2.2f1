@@ -1,8 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
-public class Texture2DInfo
+public class Texture2DInfo : IDisposable
 {
     public enum TextureType { Albedo, Normal, Specular, AmbientOcclusion, Invalid }
 
@@ -129,4 +130,8 @@ public class Texture2DInfo
         return result;
     }
 
+    public void Dispose()
+    {
+        UnityEngine.GameObject.Destroy(Texture);
+    }
 }

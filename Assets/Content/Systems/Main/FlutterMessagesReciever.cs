@@ -35,9 +35,10 @@ public class FlutterMessagesReciever : MonoBehaviour
 #endif
 
         Application.targetFrameRate = 60;
+#if !UNITY_EDITOR
         session.subsystem.Start();
         aRPlaneManager.subsystem.Start();
-
+#endif
         objectPlacer.ResetObject();
         //objectPlacer.EnableVisual();
         //objectLoader.ClearObject();
@@ -60,12 +61,12 @@ public class FlutterMessagesReciever : MonoBehaviour
             subsystem.ApplyWorldMap(default);
         }
 #endif
-
+#if !UNITY_EDITOR
         session.Reset();
 
         session.subsystem.Stop();
         aRPlaneManager.subsystem.Stop();
-
+#endif
         objectPlacer.ResetObject();
         //objectPlacer.EnableVisual();
         //objectLoader.ClearObject();

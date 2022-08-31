@@ -39,6 +39,7 @@ public class ARObjectLoader : MonoBehaviour
 
     public static ARObjectLoader Instance { get; private set; }
 
+    private List<Texture2DInfo> loadedTextures = new List<Texture2DInfo>();
     private void Start()
     {
         Instance = this;
@@ -137,6 +138,14 @@ public class ARObjectLoader : MonoBehaviour
 
     public void LoadTextures(string allPath)
     {
+        if (loadedTextures.Count != 0)
+            foreach (Texture2DInfo item in loadedTextures)
+            {
+                item.Dispose();
+            }
+        System.GC.Collect();
+        Resources.UnloadUnusedAssets();
+        // loadedTextures = new List<Texture2DInfo>();
         StartCoroutine(LoadTexturesRoutine(allPath));
     }
 
@@ -152,7 +161,7 @@ public class ARObjectLoader : MonoBehaviour
 
 
         //load all maps
-        List<Texture2DInfo> textures = Texture2DInfo.GetTexturesFromCombinedPath(allPath);
+        loadedTextures = Texture2DInfo.GetTexturesFromCombinedPath(allPath);
         //int mapCount = textures.Count;
         //int loadedTex = 0;
         List<Material> appliedMaterials = new List<Material>();
@@ -179,7 +188,7 @@ public class ARObjectLoader : MonoBehaviour
 
                 string materialPrefix = material.name.Split('.', '_')[0];
                 bool materialApplied = false;
-                foreach (Texture2DInfo texInfo in textures)
+                foreach (Texture2DInfo texInfo in loadedTextures)
                 {
                     if (texInfo.TryApplyToMaterial(material))
                     {
@@ -197,14 +206,14 @@ public class ARObjectLoader : MonoBehaviour
 
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-        int appliedTexturesCount = textures.Where(i => i.WasApplied).Count();
-        if (appliedTexturesCount != textures.Count)
+        int appliedTexturesCount = loadedTextures.Where(i => i.WasApplied).Count();
+        if (appliedTexturesCount != loadedTextures.Count)
         {
             StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.AppendLine($"Loaded {appliedTexturesCount}/{textures.Count} textures:");
+            stringBuilder.AppendLine($"Loaded {appliedTexturesCount}/{loadedTextures.Count} textures:");
             stringBuilder.AppendLine($"Loose textures:");
 
-            foreach (Texture2DInfo item in textures.Where(i => i.WasApplied == false))
+            foreach (Texture2DInfo item in loadedTextures.Where(i => i.WasApplied == false))
                 stringBuilder.AppendLine(item.ToString());
 
             Debug.LogError(stringBuilder.ToString());

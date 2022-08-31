@@ -50,6 +50,13 @@ public class TestBehaviour : MonoBehaviour
             messages.ClearAR();
 
         }
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            //clear scene
+            Debug.Log($"Emulating <Start AR> call from flutter");
+            messages.StartAR();
+
+        }
     }
 #endif
 }
