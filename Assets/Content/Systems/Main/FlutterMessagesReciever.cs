@@ -13,6 +13,10 @@ public class FlutterMessagesReciever : MonoBehaviour
     [SerializeField]
     private ARObjectPlacer objectPlacer;
 
+
+    [SerializeField]
+    private HelpMessages helpMessages;
+
     [SerializeField]
     private ARSession session;
 
@@ -44,7 +48,7 @@ public class FlutterMessagesReciever : MonoBehaviour
         //objectLoader.ClearObject();
         aRPlaneManager.enabled = true;
         // aRPlaneManager.trackables.
-
+        helpMessages.ResetState();
     }
 
     public void ClearAR() // USED FROM FLUTTER

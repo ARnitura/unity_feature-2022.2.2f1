@@ -42,7 +42,8 @@ public class ARObjectDecorator : MonoBehaviour
         Transform shadowPlane = Instantiate(shadowPlanePrefab);
 
         shadowPlane.position = modelTransform.position + modelCollider.center + Vector3.down * modelCollider.size.y / 1.98f;
-        shadowPlane.SetParent(modelTransform);
+
+        shadowPlane.SetParent(modelTransform.parent);
     }
 
     //TODO move ruler creation logic to individual rulers
@@ -50,7 +51,7 @@ public class ARObjectDecorator : MonoBehaviour
     {
         rulerRoot = new GameObject("RulerRoot").transform;
         rulerRoot.position = modelTransform.position;
-        rulerRoot.SetParent(modelTransform);
+        rulerRoot.SetParent(modelTransform.parent);
 
         //create up axis
         Transform upAxis = Instantiate(rulerPrefab);

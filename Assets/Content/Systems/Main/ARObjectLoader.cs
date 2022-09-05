@@ -84,7 +84,10 @@ public class ARObjectLoader : MonoBehaviour
         if (assetLoaderContext.RootGameObject == null)
             Debug.LogError($"Loaded root gameobject is null (check path to model)");
 #endif
+        Transform newObject = new GameObject("LoadedModel").transform;
         LoadedModelTransform = assetLoaderContext.RootGameObject.transform;
+
+        LoadedModelTransform.parent = newObject;
 
         CreateModelCollider();
         decorator.Decorate();
@@ -269,9 +272,16 @@ public class ARObjectLoader : MonoBehaviour
             Destroy(LoadedModelTransform.gameObject);
 
         LoadedModelTransform = Instantiate(debugModelPrefab, Vector3.zero, Quaternion.identity);
+
+        Transform newObject = new GameObject("LoadedModel").transform;
+        LoadedModelTransform.parent = newObject;
+
         CreateModelCollider();
         decorator.Decorate();
         LoadedModelTransform.gameObject.SetActive(false);
+
+        UnityMessageManager.Instance.SendMessageToFlutter("ar_model_loaded");
+
         Debug.LogWarning("Loaded model from resources");
     }
 #endif

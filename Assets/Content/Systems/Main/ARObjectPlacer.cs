@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -18,6 +20,7 @@ public class ARObjectPlacer : MonoBehaviour
     [Header("Model settings")]
     //later we need more data about model rotation axis
     [SerializeField] private Vector3 modelRotationAxis = Vector3.down;
+    [SerializeField] private float yUpLength = 1;
 
 
     [Header("Debug")]
@@ -32,9 +35,15 @@ public class ARObjectPlacer : MonoBehaviour
     private bool touchLock = false;
 
     private Vector2 touchLockPos;
-    private Vector3 currentVelocity;
-    private float touchLockY;
+    private Vector3 currentObjectVelocity;
+    private Vector3 currentModelVelocity;
+    private float placedTransformPlaneY;
     private Transform placedTransform = null;
+    private Transform modelTransform = null;
+
+
+
+    public static Action OnRotationStart, OnRotationEnd, OnMoveStart, OnMoveEnd;
 
     private void Awake()
     {
@@ -42,10 +51,24 @@ public class ARObjectPlacer : MonoBehaviour
 
         m_RaycastManager = GetComponent<ARRaycastManager>();
         aRPlaneManager = GetComponent<ARPlaneManager>();
+
+        OnRotationEnd += OnRotationEndEvent;
+        OnMoveEnd += OnMoveEndEvent;
+
+        OnRotationStart += OnRotationStartEvent;
+        OnMoveStart += OnMoveStartEvent;
     }
+
+
+
     private void Update()
     {
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
+        if (Input.GetKeyDown(KeyCode.A))
+        {
+            PlaceObject(new Vector3(2, 0, 2), Quaternion.identity);
+        }
+
         string spawnedObjectColor = objectLoader.LoadedModelTransform != null ? ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
         string touchColor = ColorUtility.ToHtmlStringRGB(Color.green);
         string touchAppliedColor = TryGetTouchPosition(out Vector2 touchPosition1) ? ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
@@ -86,9 +109,7 @@ public class ARObjectPlacer : MonoBehaviour
             List<ARRaycastHit> hitInfo = new List<ARRaycastHit>();
             if (m_RaycastManager.Raycast(touchPosition, hitInfo, TrackableType.PlaneWithinPolygon))
             {
-                placedTransform = objectLoader.LoadedModelTransform;
-
-                PlaceObject(hitInfo[0]);
+                PlaceObject(hitInfo[0].pose.position, hitInfo[0].pose.rotation);
                 EnableVisual();
             }
         }
@@ -101,18 +122,29 @@ public class ARObjectPlacer : MonoBehaviour
         }
     }
 
-    private void PlaceObject(ARRaycastHit hit)
+    private void PlaceObject(Vector3 pos, Quaternion rot)
     {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        Debug.Log($"Model transform = {objectLoader.LoadedModelTransform.gameObject.name}");
+        Debug.Log($"Placed transform = {objectLoader.LoadedModelTransform.parent.gameObject.name}");
+#endif
+        modelTransform = objectLoader.LoadedModelTransform;
+        placedTransform = modelTransform.parent;
+
+
         aRPlaneManager.enabled = false;
         foreach (ARPlane plane in aRPlaneManager.trackables)
             plane.gameObject.SetActive(false);
 
-        Vector3 hitPos = hit.pose.position;
-        Quaternion hitRot = hit.pose.rotation;
+        //Vector3 hitPos = hit.pose.position;
+        // Quaternion hitRot = hit.pose.rotation;
 
         placedTransform.gameObject.SetActive(true);
-        placedTransform.position = hitPos;
-        placedTransform.rotation = hitRot;
+        modelTransform.gameObject.SetActive(true);
+
+        placedTransform.position = pos;
+        placedTransformPlaneY = placedTransform.position.y;
+        placedTransform.rotation = rot;
     }
     private void MoveObject()
     {
@@ -133,11 +165,12 @@ public class ARObjectPlacer : MonoBehaviour
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
                     debugRaycastTransform.position = hitInfo.point;
 #endif
-                    if (hitInfo.collider.transform == placedTransform)
+                    if (hitInfo.collider.transform == modelTransform)
                     {
                         touchLock = true;
                         touchLockPos = touch.position;
-                        touchLockY = placedTransform.position.y;
+
+                        OnMoveStart?.Invoke();
                     }
                 }
             }
@@ -165,15 +198,24 @@ public class ARObjectPlacer : MonoBehaviour
             Vector3 projectedScreen = ARCamera.ScreenToWorldPoint(screenPosition);
             Vector3 projectedPosition = new Vector3(projectedScreen.x, placedTransform.position.y, projectedScreen.z);
             Vector3 clampedPosition = Vector3.ClampMagnitude(projectedPosition, 5);
-            clampedPosition.y = touchLockY;
+            clampedPosition.y = placedTransformPlaneY;
 
-            placedTransform.position = Vector3.SmoothDamp(placedTransform.position, clampedPosition, ref currentVelocity, 0.05f);
+            placedTransform.position = Vector3.SmoothDamp(placedTransform.position, clampedPosition, ref currentObjectVelocity, 0.05f);
+            modelTransform.localPosition = Vector3.SmoothDamp(modelTransform.localPosition, Vector3.up * yUpLength, ref currentModelVelocity, 0.05f);
+
 
         }
 
         //uncheck touchLock
         if (touch.phase == TouchPhase.Ended)
+        {
+            if (touchLock)
+                OnMoveEnd?.Invoke();
+
             touchLock = false;
+        }
+
+
     }
     private void RotateObject()
     {
@@ -187,8 +229,18 @@ public class ARObjectPlacer : MonoBehaviour
         placedTransform.Rotate(modelRotationAxis, twistDegrees);
         placedTransform.Rotate(modelRotationAxis, twistDegrees);
 
+        Vector3 targetPos = placedTransform.position;
+        targetPos.y = placedTransformPlaneY;
+
+        modelTransform.localPosition = Vector3.SmoothDamp(modelTransform.localPosition, Vector3.up * yUpLength, ref currentModelVelocity, 0.05f);
+        placedTransform.position = Vector3.SmoothDamp(placedTransform.position, targetPos, ref currentObjectVelocity, 0.05f);
+
         //block set position while rotated
-        isRotating = true;
+        if (!isRotating)
+        {
+            isRotating = true;
+            OnRotationStart?.Invoke();
+        }
     }
 
     private bool TryGetTouchPosition(out Vector2 touchPosition)
@@ -199,7 +251,12 @@ public class ARObjectPlacer : MonoBehaviour
             return true;
         }
 
+        if (isRotating)
+            OnRotationEnd?.Invoke();
+
         isRotating = false;
+
+
 
         touchPosition = default;
         return false;
@@ -216,5 +273,45 @@ public class ARObjectPlacer : MonoBehaviour
     private void EnableVisual()
     {
         planeMarker.SetActive(true);
+    }
+
+
+    private void OnMoveStartEvent()
+    {
+        StopAllCoroutines();
+        //Debug.Log("OnMoveStart");
+    }
+
+    private void OnRotationStartEvent()
+    {
+        StopAllCoroutines();
+        // Debug.Log("OnRotationStart");
+    }
+
+    private void OnMoveEndEvent()
+    {
+        StartCoroutine(TranslateToPlane());
+        // Debug.Log("OnMoveEnd");
+    }
+
+    private void OnRotationEndEvent()
+    {
+        StartCoroutine(TranslateToPlane());
+        // Debug.Log("OnRotationEnd");
+    }
+
+    private IEnumerator TranslateToPlane()
+    {
+        float duration = 0.5f;
+        float t = 0;
+
+        Vector3 startPos = modelTransform.localPosition;
+        while (t < 1)
+        {
+            t += Time.deltaTime / duration;
+            modelTransform.localPosition = new Vector3(0, Mathf.SmoothStep(startPos.y, 0, t), 0);
+
+            yield return null;
+        }
     }
 }
