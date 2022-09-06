@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 using UnityEngine;
 
 public class Texture2DInfo : IDisposable
@@ -21,24 +23,49 @@ public class Texture2DInfo : IDisposable
         WasApplied = false;
 
         string[] nameParts = System.IO.Path.GetFileNameWithoutExtension(path).Split('_');
-        MaterialName = nameParts[0];
+        StringBuilder matNameBuilder = new StringBuilder();
+        for (int i = 0; i < nameParts.Length - 1; i++)
+            matNameBuilder.Append(nameParts[i]);
+
+        MaterialName = matNameBuilder.ToString();
+
+        string typeName = nameParts[nameParts.Length - 1].ToLower();
+        typeName.Trim();
+
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+        if (typeName.Any(char.IsDigit))
+            Debug.LogWarning($"Texture type contains digits! This is not allowed!\nTexture: {MaterialName}_{typeName}.???");
+#endif
+        typeName = typeName.RemoveDigits();
+
         Type = TextureType.Invalid;
 
-        switch (nameParts[1].ToLower())
+        switch (typeName)
         {
             case "basecolor":
+            case "color":
+            case "albedo":
+            case "diffuse":
+            case "dif":
                 Type = TextureType.Albedo;
                 Texture = LoadTextureData(path);
                 break;
+
             case "normal":
+            case "nor":
+            case "normalmap":
                 Type = TextureType.Normal;
                 Texture = LoadNormalData(path);
                 break;
+
             case "specular":
+            case "spec":
                 Type = TextureType.Specular;
                 Texture = LoadTextureData(path);
                 break;
+
             case "ao":
+            case "ambientocclusion":
                 Type = TextureType.AmbientOcclusion;
                 Texture = LoadTextureData(path);
                 break;
@@ -47,7 +74,7 @@ public class Texture2DInfo : IDisposable
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
         if (Type == TextureType.Invalid)
         {
-            Debug.LogError($"Couldn't parse texture type\nMaterial<{MaterialName}>\nType<{nameParts[1]}>\nat {path}");
+            Debug.LogError($"Couldn't parse texture type\nMaterial<{MaterialName}>\nType<{typeName}>\nat {path}");
         }
 #endif
     }
@@ -132,6 +159,6 @@ public class Texture2DInfo : IDisposable
 
     public void Dispose()
     {
-        UnityEngine.GameObject.Destroy(Texture);
+        UnityEngine.Object.Destroy(Texture);
     }
 }

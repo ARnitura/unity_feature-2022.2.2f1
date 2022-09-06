@@ -1,10 +1,6 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class UIEventManager : MonoBehaviour
 {
@@ -16,12 +12,12 @@ public class UIEventManager : MonoBehaviour
     private UIEvent visualElementPrefab;
     [SerializeField]
     private RectTransform referenceElementPrefab;
-    private static System.Random random = new System.Random();
+    private static readonly System.Random random = new System.Random();
 
     private enum LogDetails { NoStacktrace, FullStacktrace }
 
     [SerializeField]
-    LogDetails logDetails = LogDetails.FullStacktrace;
+    private LogDetails logDetails = LogDetails.FullStacktrace;
 
     private void Start()
     {
@@ -72,6 +68,9 @@ public class UIEventManager : MonoBehaviour
 
     public static void AddEvent(string message, float duration, float fontSize = 30)
     {
+        if (!instance)
+            return;
+
         RectTransform a = Instantiate(instance.referenceElementPrefab, instance.queueA);
         UIEvent v = Instantiate(instance.visualElementPrefab, instance.queueV);
 
