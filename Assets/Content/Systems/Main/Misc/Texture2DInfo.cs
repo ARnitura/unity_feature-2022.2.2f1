@@ -27,7 +27,7 @@ public class Texture2DInfo : IDisposable
         for (int i = 0; i < nameParts.Length - 1; i++)
             matNameBuilder.Append(nameParts[i]);
 
-        MaterialName = matNameBuilder.ToString();
+        MaterialName = matNameBuilder.ToString().ToLower();
 
         string typeName = nameParts[nameParts.Length - 1].ToLower();
         typeName.Trim();
