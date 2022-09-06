@@ -30,9 +30,9 @@ public class ARObjectDecorator : MonoBehaviour
 #endif
     }
 
-    public void Decorate()
+    public void Decorate(Transform modelTransform)
     {
-        modelTransform = ARObjectLoader.Instance.LoadedModelTransform;
+        this.modelTransform = modelTransform;
         CreateRulers();
         CreateShadowplane();
     }

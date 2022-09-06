@@ -90,7 +90,7 @@ public class ARObjectLoader : MonoBehaviour
         LoadedModelTransform.parent = newObject;
 
         CreateModelCollider();
-        decorator.Decorate();
+        decorator.Decorate(LoadedModelTransform);
         LoadedModelTransform.gameObject.SetActive(false);
 
         UnityMessageManager.Instance.SendMessageToFlutter("ar_model_loaded");
@@ -277,7 +277,7 @@ public class ARObjectLoader : MonoBehaviour
         LoadedModelTransform.parent = newObject;
 
         CreateModelCollider();
-        decorator.Decorate();
+        decorator.Decorate(LoadedModelTransform);
         LoadedModelTransform.gameObject.SetActive(false);
 
         UnityMessageManager.Instance.SendMessageToFlutter("ar_model_loaded");
