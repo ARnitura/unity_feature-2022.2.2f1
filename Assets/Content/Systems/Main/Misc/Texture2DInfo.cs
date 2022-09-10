@@ -25,7 +25,13 @@ public class Texture2DInfo : IDisposable
         string[] nameParts = System.IO.Path.GetFileNameWithoutExtension(path).Split('_');
         StringBuilder matNameBuilder = new StringBuilder();
         for (int i = 0; i < nameParts.Length - 1; i++)
-            matNameBuilder.Append(nameParts[i]);
+        {
+            if (i != 0)
+                matNameBuilder.AppendJoin('_', nameParts[i]);
+            else
+                matNameBuilder.Append(nameParts[i]);
+        }
+
 
         MaterialName = matNameBuilder.ToString().ToLower();
 
@@ -81,7 +87,7 @@ public class Texture2DInfo : IDisposable
 
     public bool TryApplyToMaterial(Material mat)
     {
-        if (!mat.name.Contains(MaterialName))
+        if (!mat.name.ToLower().Contains(MaterialName))
             return false;
 
         switch (Type)
