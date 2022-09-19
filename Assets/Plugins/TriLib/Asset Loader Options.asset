@@ -21,7 +21,7 @@ MonoBehaviour:
   ImportMeshes: 1
   LimitBoneWeights: 1
   ReadEnabled: 1
-  ReadAndWriteEnabled: 0
+  ReadAndWriteEnabled: 1
   OptimizeMeshes: 1
   GenerateColliders: 0
   ConvexColliders: 0

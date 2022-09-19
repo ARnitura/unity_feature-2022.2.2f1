@@ -14,7 +14,9 @@ public class ARObjectLoader : MonoBehaviour
     [SerializeField]
     private AssetLoaderOptions assetLoaderOptions;
     [SerializeField]
-    private Material referenceMaterial;
+    private Material referenceMaterialStandard;
+    [SerializeField]
+    private Material referenceMaterialForSecondUV;
 
     [Header("Decorator")]
     [SerializeField]
@@ -31,7 +33,7 @@ public class ARObjectLoader : MonoBehaviour
 
     public Transform LoadedModelTransform { get; private set; }
 
-    private MeshRenderer[] meshRenderers;
+    private Renderer[] meshRenderers;
 
 
     //for debug purposes
@@ -40,10 +42,7 @@ public class ARObjectLoader : MonoBehaviour
     public static ARObjectLoader Instance { get; private set; }
 
     private List<Texture2DInfo> loadedTextures = new List<Texture2DInfo>();
-    private void Start()
-    {
-        Instance = this;
-    }
+    private void Start() => Instance = this;
 
     public void LoadModel(string filePath)
     {
@@ -152,6 +151,45 @@ public class ARObjectLoader : MonoBehaviour
         StartCoroutine(LoadTexturesRoutine(allPath));
     }
 
+    private void SetMaterialsForMeshes()
+    {
+        foreach (Renderer renderer in meshRenderers)
+            foreach (Material material in renderer.materials)
+            {
+                MeshFilter meshFilter = renderer.GetComponent<MeshFilter>();
+                SkinnedMeshRenderer skinnedMeshRenderer = renderer as SkinnedMeshRenderer;
+
+                Mesh resultingMesh = null;
+
+                if (meshFilter != null)
+                {
+                    resultingMesh = meshFilter.mesh;
+                }
+                else if (skinnedMeshRenderer != null)
+                {
+                    resultingMesh = skinnedMeshRenderer.sharedMesh;
+                }
+                else
+                    throw new System.ArgumentNullException($"Couldn't apply material to object {renderer.gameObject.name}! Check if model loaded correctly");
+
+                if (resultingMesh != null)
+                {
+                    if (resultingMesh.uv2.Length > 0)
+                    {
+                        //wow, we have second uv set...
+                        material.shader = referenceMaterialForSecondUV.shader;
+                        material.CopyPropertiesFromMaterial(referenceMaterialForSecondUV);
+                    }
+                    else
+                    {
+                        material.shader = referenceMaterialStandard.shader;
+                        material.CopyPropertiesFromMaterial(referenceMaterialStandard);
+                    }
+                }
+
+            }
+    }
+
     private IEnumerator LoadTexturesRoutine(string allPath)
     {
         lastTexPath = allPath;
@@ -170,12 +208,7 @@ public class ARObjectLoader : MonoBehaviour
         List<Material> appliedMaterials = new List<Material>();
 
         //copy material properties from ref material
-        foreach (MeshRenderer renderer in meshRenderers)
-            foreach (Material material in renderer.materials)
-            {
-                material.shader = referenceMaterial.shader;
-                material.CopyPropertiesFromMaterial(referenceMaterial);
-            }
+        SetMaterialsForMeshes();
 
 
         //skip the frame to apply material properties
@@ -255,10 +288,7 @@ public class ARObjectLoader : MonoBehaviour
 
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-    public void DebugReloadModel()
-    {
-        LoadModel(lastModelPath);
-    }
+    public void DebugReloadModel() => LoadModel(lastModelPath);
     public void DebugReloadTextures()
     {
         if (LoadedModelTransform != null)
