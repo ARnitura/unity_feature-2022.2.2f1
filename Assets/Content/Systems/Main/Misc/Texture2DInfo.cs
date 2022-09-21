@@ -89,7 +89,16 @@ public class Texture2DInfo : IDisposable
     {
         if (Type != TextureType.AmbientOcclusion)
             if (!mat.name.ToLower().Contains(MaterialName))
+            {
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+                //Debug.LogError($"Refused texture {ToString()} on material <{mat.name.ToLower()}>");
+#endif
                 return false;
+            }
+
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+        //Debug.LogWarning($"Connected texture {ToString()} on material <{mat.name.ToLower()}>");
+#endif
 
         switch (Type)
         {
@@ -113,7 +122,7 @@ public class Texture2DInfo : IDisposable
         return true;
     }
 
-    public override string ToString() => $"MaterialName: {MaterialName} Type: {Type}";
+    public override string ToString() => $"MaterialName: <{MaterialName}> Type: {Type}";
 
     public static Texture2D LoadTextureData(string filePath)
     {
@@ -127,9 +136,13 @@ public class Texture2DInfo : IDisposable
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
             if (!tex.LoadImage(fileData)) //..this will auto-resize the texture dimensions.
             {
-                Debug.LogError($"Failed to load texture from path: {filePath}");
+                Debug.LogError($"Failed to load texture from path: {filePath} - invalid format");
             }
 #endif
+        }
+        else
+        {
+            Debug.LogError($"Failed to load texture from path: {filePath} - file doesn't exist");
         }
 
         return tex;
@@ -138,6 +151,7 @@ public class Texture2DInfo : IDisposable
     public static Texture2D LoadNormalData(string filePath)
     {
         Texture2D loadedNormalMap = LoadTextureData(filePath);
+
         // note format is now copied from the loaded texture
         Texture2D convertedNormalMap = new Texture2D(loadedNormalMap.width, loadedNormalMap.height, loadedNormalMap.format, true, true);
         // the documentation on this function says it's GPU side only, but this is a lie

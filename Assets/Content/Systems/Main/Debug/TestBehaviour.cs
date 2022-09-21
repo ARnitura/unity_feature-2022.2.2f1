@@ -9,14 +9,7 @@ public class TestBehaviour : MonoBehaviour
     private FlutterMessagesReciever messages;
     private string testFolderDir;
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-    private void Start()
-    {
-
-        testFolderDir = Path.Combine(Directory.GetParent(Application.dataPath).FullName, @"testFolder\");
-        //Debug.Log(Application.dataPath);
-        //Debug.Log(Directory.GetParent(Application.dataPath).FullName);
-        //Debug.Log(testFolderDir);
-    }
+    private void Start() => testFolderDir = Path.Combine(Directory.GetParent(Application.dataPath).FullName, @"testFolder\");//Debug.Log(Application.dataPath);//Debug.Log(Directory.GetParent(Application.dataPath).FullName);//Debug.Log(testFolderDir);
 
     private void Update()
     {
@@ -25,7 +18,8 @@ public class TestBehaviour : MonoBehaviour
         {
             //load model
             Debug.Log($"Emulating <load model> call from flutter");
-            messages.LoadModel(testFolderDir + "1.fbx");
+            //messages.LoadModel(testFolderDir + "1.fbx");
+            messages.LoadModel(testFolderDir + "GloriyaAnimation.fbx");
 
 
 
@@ -34,6 +28,7 @@ public class TestBehaviour : MonoBehaviour
         {
             //load texture
             Debug.Log($"Emulating <load texture> call from flutter");
+            /*
             string fullpath = string.Join(", ",
                 testFolderDir + @"tex\Leather_BaseColor.jpg",
                 testFolderDir + @"tex\Leather_Normal.jpg",
@@ -41,6 +36,15 @@ public class TestBehaviour : MonoBehaviour
                 testFolderDir + @"tex\Wood_BaseColor.jpg",
                 testFolderDir + @"tex\Wood_Normal.jpg"
                 );
+            */
+
+            string fullpath = string.Join(", ",
+    testFolderDir + @"tex2\LeatherGreen_basecolor.jpg",
+    testFolderDir + @"tex2\LeatherGreen_normal.jpg",
+    testFolderDir + @"tex2\metal_basecolor.png",
+    testFolderDir + @"tex2\metal_specular.png",
+    testFolderDir + @"tex2\AO.png"
+    );
 
             messages.LoadTexture(fullpath);
 
@@ -64,15 +68,9 @@ public class TestBehaviour : MonoBehaviour
 
 
 
-    public void WebLoadModel()
-    {
-        StartCoroutine(WebLoadModelCoroutine());
-    }
+    public void WebLoadModel() => StartCoroutine(WebLoadModelCoroutine());
 
-    public void WebLoadAllTextures()
-    {
-        StartCoroutine(WebLoadAllTexturesCoroutine());
-    }
+    public void WebLoadAllTextures() => StartCoroutine(WebLoadAllTexturesCoroutine());
 
     private IEnumerator WebLoadAllTexturesCoroutine()
     {

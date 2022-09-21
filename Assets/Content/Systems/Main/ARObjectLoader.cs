@@ -33,7 +33,7 @@ public class ARObjectLoader : MonoBehaviour
 
     public Transform LoadedModelTransform { get; private set; }
 
-    private Renderer[] meshRenderers;
+    private Renderer[] modelRenderers;
 
 
     //for debug purposes
@@ -111,8 +111,8 @@ public class ARObjectLoader : MonoBehaviour
         LoadedModelTransform.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
         Bounds resultingBounds = new Bounds(LoadedModelTransform.transform.position, Vector3.zero);
 
-        meshRenderers = LoadedModelTransform.GetComponentsInChildren<MeshRenderer>();
-        foreach (MeshRenderer renderer in meshRenderers)
+        modelRenderers = LoadedModelTransform.GetComponentsInChildren<Renderer>();
+        foreach (Renderer renderer in modelRenderers)
             resultingBounds.Encapsulate(renderer.bounds);
 
         //calculate localCenter
@@ -153,7 +153,7 @@ public class ARObjectLoader : MonoBehaviour
 
     private void SetMaterialsForMeshes()
     {
-        foreach (Renderer renderer in meshRenderers)
+        foreach (Renderer renderer in modelRenderers)
             foreach (Material material in renderer.materials)
             {
                 MeshFilter meshFilter = renderer.GetComponent<MeshFilter>();
@@ -215,7 +215,7 @@ public class ARObjectLoader : MonoBehaviour
         yield return null;
 
         //do something reasonable with this bycycle
-        foreach (MeshRenderer renderer in meshRenderers)
+        foreach (Renderer renderer in modelRenderers)
         {
             foreach (Material material in renderer.materials)
             {
@@ -258,7 +258,7 @@ public class ARObjectLoader : MonoBehaviour
             Debug.LogWarning("All textures loaded");
 
         List<Material> uniqueMaterials = new List<Material>();
-        foreach (MeshRenderer renderer in meshRenderers)
+        foreach (Renderer renderer in modelRenderers)
             foreach (Material material in renderer.materials)
                 if (!uniqueMaterials.Contains(material))
                     uniqueMaterials.Add(material);
