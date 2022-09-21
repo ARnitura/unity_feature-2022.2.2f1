@@ -222,7 +222,7 @@ public class ARObjectLoader : MonoBehaviour
                 if (appliedMaterials.Contains(material))
                     continue;
 
-                string materialPrefix = material.name.Split('.', '_')[0].ToLower();
+                //string materialPrefix = material.name.Split('.', '_')[0].ToLower();
                 bool materialApplied = false;
                 foreach (Texture2DInfo texInfo in loadedTextures)
                 {

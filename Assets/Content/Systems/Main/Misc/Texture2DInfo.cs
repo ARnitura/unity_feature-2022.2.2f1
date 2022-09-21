@@ -87,8 +87,9 @@ public class Texture2DInfo : IDisposable
 
     public bool TryApplyToMaterial(Material mat)
     {
-        if (!mat.name.ToLower().Contains(MaterialName))
-            return false;
+        if (Type != TextureType.AmbientOcclusion)
+            if (!mat.name.ToLower().Contains(MaterialName))
+                return false;
 
         switch (Type)
         {
@@ -112,10 +113,7 @@ public class Texture2DInfo : IDisposable
         return true;
     }
 
-    public override string ToString()
-    {
-        return $"MaterialName: {MaterialName} Type: {Type}";
-    }
+    public override string ToString() => $"MaterialName: {MaterialName} Type: {Type}";
 
     public static Texture2D LoadTextureData(string filePath)
     {
@@ -163,8 +161,5 @@ public class Texture2DInfo : IDisposable
         return result;
     }
 
-    public void Dispose()
-    {
-        UnityEngine.Object.Destroy(Texture);
-    }
+    public void Dispose() => UnityEngine.Object.Destroy(Texture);
 }
