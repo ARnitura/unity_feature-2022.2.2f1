@@ -23,7 +23,7 @@ MonoBehaviour:
   ReadEnabled: 1
   ReadAndWriteEnabled: 1
   OptimizeMeshes: 1
-  GenerateColliders: 0
+  GenerateColliders: 1
   ConvexColliders: 0
   ImportBlendShapes: 0
   ImportColors: 0
@@ -62,7 +62,7 @@ MonoBehaviour:
     lowerLegTwist: 0.5
     upperArmTwist: 0.5
     upperLegTwist: 0.5
-  RootBoneMapper: {fileID: 0}
+  RootBoneMapper: {fileID: 11400000, guid: 50bc0b80563ac8b479a3244ff1264f83, type: 2}
   HumanoidAvatarMapper: {fileID: 0}
   LipSyncMappers: []
   SampleBindPose: 0
@@ -71,8 +71,9 @@ MonoBehaviour:
   EnforceAnimatorWithLegacyAnimations: 0
   AutomaticallyPlayLegacyAnimations: 0
   ResampleFrequency: 4
-  AnimationWrapMode: 2
-  AnimationClipMappers: []
+  AnimationWrapMode: 1
+  AnimationClipMappers:
+  - {fileID: 11400000, guid: f8e164fd2167a0049a4ec7e5bb8b2713, type: 2}
   ExternalDataMapper: {fileID: 0}
   ShowLoadingWarnings: 0
   CloseStreamAutomatically: 1
@@ -80,7 +81,7 @@ MonoBehaviour:
   DestroyOnError: 1
   EnsureQuaternionContinuity: 0
   UseMaterialKeywords: 0
-  ForceGCCollectionWhileLoading: 1
+  ForceGCCollectionWhileLoading: 0
   MergeVertices: 1
   MarkTexturesNoLongerReadable: 1
   UseUnityNativeNormalCalculator: 0
@@ -95,7 +96,7 @@ MonoBehaviour:
   MaxTexturesResolution: 0
   EnableProfiler: 0
   UseUnityNativeTextureLoader: 0
-  LoadMaterialsProgressively: 0
+  LoadMaterialsProgressively: 1
   ImportCameras: 0
   ImportLights: 0
   DisableObjectsRenaming: 0

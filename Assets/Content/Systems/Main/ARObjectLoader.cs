@@ -42,6 +42,7 @@ public class ARObjectLoader : MonoBehaviour
     public static ARObjectLoader Instance { get; private set; }
 
     private List<Texture2DInfo> loadedTextures = new List<Texture2DInfo>();
+    private List<string> animationClips = new List<string>();
     private void Start() => Instance = this;
 
     public void LoadModel(string filePath)
@@ -50,7 +51,11 @@ public class ARObjectLoader : MonoBehaviour
 
         //destroy previously loaded model
         if (LoadedModelTransform)
+        {
+            OnModelUnload();
             Destroy(LoadedModelTransform.gameObject);
+        }
+
 
 
 
@@ -63,36 +68,93 @@ public class ARObjectLoader : MonoBehaviour
         if (useMainThread)
         {
             AssetLoaderContext assetLoaderContext = AssetLoader.LoadModelFromFileNoThread(filePath, null, null, assetLoaderOptions, null);
-            OnModelLoaded(assetLoaderContext);
+            LoadedModelTransform = assetLoaderContext.RootGameObject.transform;
+            OnModelLoaded();
         }
         else
         {
             AssetLoader.LoadModelFromFile(filePath, null,
                 delegate (AssetLoaderContext assetLoaderContext)
             {
-                OnModelLoaded(assetLoaderContext);
+
+                LoadedModelTransform = assetLoaderContext.RootGameObject.transform;
+                OnModelLoaded();
             });
 
         }
     }
 
+    private void OnModelUnload()
+    {
+        //delete animationButton if exists
+        GetComponent<WorldPosButtonsManager>().RemoveButton(LoadedModelTransform);
+        animationClips = new List<string>();
+    }
 
-    private void OnModelLoaded(AssetLoaderContext assetLoaderContext)
+    private void OnModelLoaded()
     {
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-        if (assetLoaderContext.RootGameObject == null)
+        if (LoadedModelTransform == null)
+        {
             Debug.LogError($"Loaded root gameobject is null (check path to model)");
+            return;
+        }
 #endif
         Transform newObject = new GameObject("LoadedModel").transform;
-        LoadedModelTransform = assetLoaderContext.RootGameObject.transform;
-
         LoadedModelTransform.parent = newObject;
 
         CreateModelCollider();
         decorator.Decorate(LoadedModelTransform);
         LoadedModelTransform.gameObject.SetActive(false);
 
+
+        Animation anim = LoadedModelTransform.GetComponentInChildren<Animation>();
+        if (anim)
+        {
+            //stop all movements and get animation clips info
+            anim.playAutomatically = false;
+            anim.Stop();
+            anim.Rewind();
+            anim.wrapMode = WrapMode.Once;
+            anim.clip = null;
+
+
+
+            string activateClip = "";
+            string deactivateClip = "";
+
+
+            //TODO: move parser logic
+            foreach (AnimationState item in anim)
+            {
+                animationClips.Add(item.name);
+                if (item.name.ToLower().Contains("unfold"))
+                {
+                    activateClip = item.name;
+                    continue;
+                }
+                else if (item.name.ToLower().Contains("fold"))
+                {
+                    deactivateClip = item.name;
+                }
+            }
+
+
+
+            GetComponent<WorldPosButtonsManager>().AddToggleButton(LoadedModelTransform, () =>
+                {
+                    anim.Play(activateClip, PlayMode.StopSameLayer);
+                }
+                , () =>
+                {
+                    anim.Play(deactivateClip, PlayMode.StopSameLayer);
+                });
+
+            //create animation button
+        }
+
         UnityMessageManager.Instance.SendMessageToFlutter("ar_model_loaded");
+
 
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
@@ -303,14 +365,7 @@ public class ARObjectLoader : MonoBehaviour
 
         LoadedModelTransform = Instantiate(debugModelPrefab, Vector3.zero, Quaternion.identity);
 
-        Transform newObject = new GameObject("LoadedModel").transform;
-        LoadedModelTransform.parent = newObject;
-
-        CreateModelCollider();
-        decorator.Decorate(LoadedModelTransform);
-        LoadedModelTransform.gameObject.SetActive(false);
-
-        UnityMessageManager.Instance.SendMessageToFlutter("ar_model_loaded");
+        OnModelLoaded();
 
         Debug.LogWarning("Loaded model from resources");
     }

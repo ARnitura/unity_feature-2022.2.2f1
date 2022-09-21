@@ -24,6 +24,8 @@ public class Texture2DInfo : IDisposable
 
         string[] nameParts = System.IO.Path.GetFileNameWithoutExtension(path).Split('_');
         StringBuilder matNameBuilder = new StringBuilder();
+
+
         for (int i = 0; i < nameParts.Length - 1; i++)
         {
             if (i != 0)
