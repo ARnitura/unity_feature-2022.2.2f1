@@ -39,7 +39,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 0}
   m_AnchoredPosition: {x: -227.7, y: 540}
-  m_SizeDelta: {x: 91.124, y: 91.124}
+  m_SizeDelta: {x: 136.686, y: 136.686}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6138200184374903352
 CanvasRenderer:
@@ -135,7 +135,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07caa8c173fd7524fa07f3db442858e3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _offset: {x: 0, y: 300}
+  _offset: {x: 0, y: 2, z: 0}
   imageGraphic: {fileID: 7636740403998421864}
   inactiveColor: {r: 0, g: 0, b: 0, a: 1}
   activeColor: {r: 0, g: 0.5686275, b: 1, a: 1}
@@ -172,10 +172,10 @@ RectTransform:
   m_Father: {fileID: 1328025906168004385}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 67.16, y: 67.16}
+  m_SizeDelta: {x: -47.679993, y: -47.679993}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &5042784413879112446
 CanvasRenderer:

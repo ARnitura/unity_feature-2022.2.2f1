@@ -1,3 +1,4 @@
+using Cysharp.Threading.Tasks;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -10,363 +11,131 @@ public class ARObjectLoader : MonoBehaviour
 {
     [Header("Import")]
     [SerializeField]
-    private bool useMainThread = false;
-    [SerializeField]
     private AssetLoaderOptions assetLoaderOptions;
-    [SerializeField]
-    private Material referenceMaterialStandard;
-    [SerializeField]
-    private Material referenceMaterialForSecondUV;
+
 
     [Header("Decorator")]
     [SerializeField]
     private ARObjectDecorator decorator;
 
+    [Header("Placer")]
+    [SerializeField]
+    private ARObjectPlacer placer;
+
+
+    [Header("UI")]
+    [SerializeField]
+    private ScanManager messages;
+
     [Header("Debug")]
     [SerializeField]
     private Transform debugModelPrefab;
+
+    public ARObject ARObject { get; private set; }
+
     [SerializeField]
-    private Transform axisDebugPrefab;
-    [SerializeField]
-    private Transform colliderDebugPrefab;
-
-
-    public Transform LoadedModelTransform { get; private set; }
-
-    private Renderer[] modelRenderers;
-
-
-    //for debug purposes
-    private string lastModelPath, lastTexPath;
-
-    public static ARObjectLoader Instance { get; private set; }
+    private ARObject arObjectPrefab;
 
     private List<Texture2DInfo> loadedTextures = new List<Texture2DInfo>();
-    private List<string> animationClips = new List<string>();
-    private void Start() => Instance = this;
+    private bool modelLoaded = false;
 
+    //model loading
     public void LoadModel(string filePath)
     {
-        lastModelPath = filePath;
-
+        modelLoaded = false;
         //destroy previously loaded model
-        if (LoadedModelTransform)
-        {
-            OnModelUnload();
-            Destroy(LoadedModelTransform.gameObject);
-        }
+        if (ARObject != null)
+            ARObject.Clear();
+        else
+            ARObject = Instantiate(arObjectPrefab, Vector3.zero, Quaternion.identity);
 
-
-
-
+        #region debug
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
         Debug.Log($"Requesting model from {filePath}");
 
         if (!File.Exists(filePath))
             Debug.LogError($"Model filePath is not valid! (file doesn't exist)");
 #endif
+        #endregion
+
+        /*
         if (useMainThread)
         {
             AssetLoaderContext assetLoaderContext = AssetLoader.LoadModelFromFileNoThread(filePath, null, null, assetLoaderOptions, null);
-            LoadedModelTransform = assetLoaderContext.RootGameObject.transform;
-            OnModelLoaded();
+            OnModelLoaded(assetLoaderContext);
         }
-        else
-        {
-            AssetLoader.LoadModelFromFile(filePath, null,
-                delegate (AssetLoaderContext assetLoaderContext)
-            {
+        */
+        AssetLoader.LoadModelFromFile(filePath, null,
+            delegate (AssetLoaderContext assetLoaderContext) { OnModelLoaded(assetLoaderContext); },
+            delegate (AssetLoaderContext context, float progrss) { UnityMessageManager.Instance.SendMessageToFlutter($"{{\"percentLoading\": {Mathf.RoundToInt(progrss * 100)}}}"); },
+            null,
+            ARObject.gameObject,
+            assetLoaderOptions);
 
-                LoadedModelTransform = assetLoaderContext.RootGameObject.transform;
-                OnModelLoaded();
-            });
-
-        }
     }
-
-    private void OnModelUnload()
-    {
-        //delete animationButton if exists
-        GetComponent<WorldPosButtonsManager>().RemoveButton(LoadedModelTransform);
-        animationClips = new List<string>();
-    }
-
-    private void OnModelLoaded()
+    private void OnModelLoaded(AssetLoaderContext assetLoaderContext)
     {
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-        if (LoadedModelTransform == null)
+        if (assetLoaderContext.RootGameObject.transform == null)
         {
             Debug.LogError($"Loaded root gameobject is null (check path to model)");
             return;
         }
 #endif
-        Transform newObject = new GameObject("LoadedModel").transform;
-        LoadedModelTransform.parent = newObject;
 
-        CreateModelCollider();
-        decorator.Decorate(LoadedModelTransform);
-        LoadedModelTransform.gameObject.SetActive(false);
-
-
-        Animation anim = LoadedModelTransform.GetComponentInChildren<Animation>();
-        if (anim)
-        {
-            //stop all movements and get animation clips info
-            anim.playAutomatically = false;
-            anim.Stop();
-            anim.Rewind();
-            anim.wrapMode = WrapMode.Once;
-            anim.clip = null;
-
-
-
-            string activateClip = "";
-            string deactivateClip = "";
-
-
-            //TODO: move parser logic
-            foreach (AnimationState item in anim)
-            {
-                animationClips.Add(item.name);
-                if (item.name.ToLower().Contains("unfold"))
-                {
-                    activateClip = item.name;
-                    continue;
-                }
-                else if (item.name.ToLower().Contains("fold"))
-                {
-                    deactivateClip = item.name;
-                }
-            }
-
-
-
-            GetComponent<WorldPosButtonsManager>().AddToggleButton(LoadedModelTransform, () =>
-                {
-                    anim.Play(activateClip, PlayMode.StopSameLayer);
-                }
-                , () =>
-                {
-                    anim.Play(deactivateClip, PlayMode.StopSameLayer);
-                });
-
-            //create animation button
-        }
-
+        ARObject.Init(assetLoaderContext.RootGameObject.transform, decorator);
         UnityMessageManager.Instance.SendMessageToFlutter("ar_model_loaded");
+        modelLoaded = true;
 
-
+        messages.StartScan();
+        placer.AssignObject(ARObject);
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-        Debug.LogWarning($"Model loaded <{LoadedModelTransform.name}>");
+        Debug.LogWarning($"Model loaded <{assetLoaderContext.RootGameObject.name}>");
 #endif
     }
 
-    private void CreateModelCollider()
-    {
-        BoxCollider modelCollider = LoadedModelTransform.gameObject.AddComponent<BoxCollider>();
-
-        //save initial object rotation
-        Quaternion currentRotation = LoadedModelTransform.transform.rotation;
-
-        //reset object rot
-        LoadedModelTransform.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
-        Bounds resultingBounds = new Bounds(LoadedModelTransform.transform.position, Vector3.zero);
-
-        modelRenderers = LoadedModelTransform.GetComponentsInChildren<Renderer>();
-        foreach (Renderer renderer in modelRenderers)
-            resultingBounds.Encapsulate(renderer.bounds);
-
-        //calculate localCenter
-        Vector3 localCenter = resultingBounds.center - LoadedModelTransform.transform.position;
-        resultingBounds.center = localCenter;
-
-        //apply init obj rotation
-        LoadedModelTransform.transform.rotation = currentRotation;
-
-        //apply bounds to box collider
-        modelCollider.center = resultingBounds.center;
-        modelCollider.size = resultingBounds.size;
-
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
-        Transform debugCollider = Instantiate(colliderDebugPrefab, LoadedModelTransform.position, LoadedModelTransform.rotation);
-        debugCollider.position = resultingBounds.center;
-        debugCollider.localScale = resultingBounds.size;
-        debugCollider.SetParent(LoadedModelTransform);
-
-        Transform debugAxis = Instantiate(axisDebugPrefab, LoadedModelTransform.position, LoadedModelTransform.rotation);
-        debugAxis.SetParent(LoadedModelTransform);
-        debugAxis.forward = LoadedModelTransform.forward;
-#endif
-    }
-
-    public void LoadTextures(string allPath)
+    public async void LoadTextures(string allPath)
     {
         if (loadedTextures.Count != 0)
             foreach (Texture2DInfo item in loadedTextures)
-            {
                 item.Dispose();
-            }
+
         System.GC.Collect();
-        Resources.UnloadUnusedAssets();
-        // loadedTextures = new List<Texture2DInfo>();
-        StartCoroutine(LoadTexturesRoutine(allPath));
-    }
+        await Resources.UnloadUnusedAssets();
 
-    private void SetMaterialsForMeshes()
-    {
-        foreach (Renderer renderer in modelRenderers)
-            foreach (Material material in renderer.materials)
-            {
-                MeshFilter meshFilter = renderer.GetComponent<MeshFilter>();
-                SkinnedMeshRenderer skinnedMeshRenderer = renderer as SkinnedMeshRenderer;
-
-                Mesh resultingMesh = null;
-
-                if (meshFilter != null)
-                {
-                    resultingMesh = meshFilter.mesh;
-                }
-                else if (skinnedMeshRenderer != null)
-                {
-                    resultingMesh = skinnedMeshRenderer.sharedMesh;
-                }
-                else
-                    throw new System.ArgumentNullException($"Couldn't apply material to object {renderer.gameObject.name}! Check if model loaded correctly");
-
-                if (resultingMesh != null)
-                {
-                    if (resultingMesh.uv2.Length > 0)
-                    {
-                        //wow, we have second uv set...
-                        material.shader = referenceMaterialForSecondUV.shader;
-                        material.CopyPropertiesFromMaterial(referenceMaterialForSecondUV);
-                    }
-                    else
-                    {
-                        material.shader = referenceMaterialStandard.shader;
-                        material.CopyPropertiesFromMaterial(referenceMaterialStandard);
-                    }
-                }
-
-            }
-    }
-
-    private IEnumerator LoadTexturesRoutine(string allPath)
-    {
-        lastTexPath = allPath;
-
+        #region DEBUG
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
         Debug.Log($"Requesting textures from {allPath}");
-        if (!LoadedModelTransform)
+        if (!modelLoaded)
+        {
             Debug.LogError("Illegal LoadTextures call on null gameObject");
+            return;
+        }
 #endif
+        #endregion
 
-
-        //load all maps
         loadedTextures = Texture2DInfo.GetTexturesFromCombinedPath(allPath);
-        //int mapCount = textures.Count;
-        //int loadedTex = 0;
-        List<Material> appliedMaterials = new List<Material>();
-
-        //copy material properties from ref material
-        SetMaterialsForMeshes();
-
-
-        //skip the frame to apply material properties
-        yield return null;
-
-        //do something reasonable with this bycycle
-        foreach (Renderer renderer in modelRenderers)
-        {
-            foreach (Material material in renderer.materials)
-            {
-                if (appliedMaterials.Contains(material))
-                    continue;
-
-                //string materialPrefix = material.name.Split('.', '_')[0].ToLower();
-                bool materialApplied = false;
-                foreach (Texture2DInfo texInfo in loadedTextures)
-                {
-                    if (texInfo.TryApplyToMaterial(material))
-                    {
-                        materialApplied = true;
-                        //loadedTex++;
-                    }
-                }
-                if (materialApplied)
-                {
-                    appliedMaterials.Add(material);
-                }
-            }
-        }
-
-
-
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
-        int appliedTexturesCount = loadedTextures.Where(i => i.WasApplied).Count();
-        if (appliedTexturesCount != loadedTextures.Count)
-        {
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.AppendLine($"Loaded {appliedTexturesCount}/{loadedTextures.Count} textures:");
-            stringBuilder.AppendLine($"Loose textures:");
-
-            foreach (Texture2DInfo item in loadedTextures.Where(i => i.WasApplied == false))
-                stringBuilder.AppendLine(item.ToString());
-
-            Debug.LogError(stringBuilder.ToString());
-        }
-        else
-            Debug.LogWarning("All textures loaded");
-
-        List<Material> uniqueMaterials = new List<Material>();
-        foreach (Renderer renderer in modelRenderers)
-            foreach (Material material in renderer.materials)
-                if (!uniqueMaterials.Contains(material))
-                    uniqueMaterials.Add(material);
-
-        if (appliedMaterials.Count != uniqueMaterials.Count)
-        {
-            StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.AppendLine($"Applied {appliedMaterials.Count}/{uniqueMaterials.Count} materials:");
-            stringBuilder.AppendLine($"Loose materials:");
-
-            foreach (Material looseMaterial in uniqueMaterials.Except(appliedMaterials).ToList())
-            {
-                stringBuilder.AppendLine($"Name: {looseMaterial.name}");
-            }
-
-
-            Debug.LogError(stringBuilder.ToString());
-        }
-        else
-        {
-            Debug.LogWarning("All materials loaded");
-        }
-#endif
+        ARObject.ApplyTextures(loadedTextures);
     }
 
-
-
-
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-    public void DebugReloadModel() => LoadModel(lastModelPath);
-    public void DebugReloadTextures()
-    {
-        if (LoadedModelTransform != null)
-            LoadTextures(lastTexPath);
-        else
-            Debug.LogError("Tried to load textures before loading model");
-    }
     public void DebugStandaloneLoadModel()
     {
-        if (LoadedModelTransform)
-            Destroy(LoadedModelTransform.gameObject);
+        if (ARObject != null)
+            ARObject.Clear();
+        else
+            ARObject = Instantiate(arObjectPrefab, Vector3.one * 9999, Quaternion.identity);
 
-        LoadedModelTransform = Instantiate(debugModelPrefab, Vector3.zero, Quaternion.identity);
+        Transform model = Instantiate(debugModelPrefab, Vector3.zero, Quaternion.identity);
+        model.SetParent(ARObject.transform);
+        ARObject.Init(model, decorator);
 
-        OnModelLoaded();
+        FindObjectOfType<FlutterMessagesReciever>().StartAR();
+        placer.AssignObject(ARObject);
 
+        modelLoaded = true;
+        //messages.StartScan();
         Debug.LogWarning("Loaded model from resources");
     }
 #endif

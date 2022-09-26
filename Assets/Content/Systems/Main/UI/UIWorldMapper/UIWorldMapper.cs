@@ -1,7 +1,7 @@
 using UnityEngine;
 
 
-public abstract class UIWorldMapper<T> : MonoBehaviour
+public abstract class UIWorldMapper<T> : MonoBehaviour where T : Component
 {
     //[field: SerializeField]
     public T ReferenceObject { get; private set; }
@@ -10,12 +10,12 @@ public abstract class UIWorldMapper<T> : MonoBehaviour
     private RectTransform _uiPointWorld;
     private float _planeDistance;
     [SerializeField]
-    protected Vector2 _offset;
+    protected Vector3 _offset;
     private bool _camOrth;
 
     public virtual void Init(Canvas targetCanvas, T reference)
     {
-        this.ReferenceObject = reference;
+        ReferenceObject = reference;
         _targetCamera = Camera.main;
         _uiPointWorld = GetComponent<RectTransform>();
         _planeDistance = targetCanvas.planeDistance;
@@ -29,7 +29,8 @@ public abstract class UIWorldMapper<T> : MonoBehaviour
     public virtual void Refresh()
     {
 
-        Vector3 targetPosition = GetMapTarget();
+        Transform refTransform = ReferenceObject.transform;
+        Vector3 targetPosition = GetMapTarget() + refTransform.right * _offset.x + refTransform.up * _offset.y + refTransform.forward * _offset.z;
 
         if (_targetCamera.WorldToScreenPoint(targetPosition).z < 0)
             return;
@@ -40,9 +41,9 @@ public abstract class UIWorldMapper<T> : MonoBehaviour
         Vector3 canvasPos = _targetCamera.ScreenToWorldPoint((Vector3)screenPos + new Vector3(0, 0, _planeDistance));
 
         if (!_camOrth)
-            _uiPointWorld.localPosition = transform.parent.InverseTransformPoint(canvasPos) + (Vector3)_offset;
+            _uiPointWorld.localPosition = transform.parent.InverseTransformPoint(canvasPos);
         else
-            _uiPointWorld.localPosition = transform.parent.InverseTransformPoint(canvasPos) + (Vector3)_offset / _targetCamera.orthographicSize;
+            _uiPointWorld.localPosition = transform.parent.InverseTransformPoint(canvasPos) / _targetCamera.orthographicSize;
 
         Vector3 localPosition = _uiPointWorld.localPosition;
         localPosition = new Vector3(localPosition.x, localPosition.y, 0);

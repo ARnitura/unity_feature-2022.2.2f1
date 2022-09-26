@@ -5,21 +5,24 @@ using UnityEngine;
 public class WorldPosButtonsManager : MonoBehaviour
 {
     [SerializeField]
-    private Transform buttonPrefab;
+    private ScreenButton buttonPrefab;
 
     [SerializeField]
-    private Transform toggleButtonPrefab;
+    private ScreenButtonToggle toggleButtonPrefab;
 
     [SerializeField]
     private Canvas targetCanvas;
 
+    public static WorldPosButtonsManager Instance { get; private set; }
+
+    private void Start() => Instance = this;
 
     private readonly List<ScreenButton> screenButtons = new List<ScreenButton>();
 
 
     public void AddButton(Transform reference, Action onClickAction = null)
     {
-        ScreenButton newButton = Instantiate(buttonPrefab, targetCanvas.transform).GetComponent<ScreenButton>();
+        ScreenButton newButton = Instantiate(buttonPrefab, targetCanvas.transform);
         newButton.Init(targetCanvas, reference);
         newButton.AddClickAction(onClickAction);
 
@@ -28,7 +31,7 @@ public class WorldPosButtonsManager : MonoBehaviour
 
     public void AddToggleButton(Transform reference, Action onAction = null, Action offAction = null)
     {
-        ScreenButtonToggle newButton = Instantiate(toggleButtonPrefab, targetCanvas.transform).GetComponent<ScreenButtonToggle>();
+        ScreenButtonToggle newButton = Instantiate(toggleButtonPrefab, targetCanvas.transform);
         newButton.Init(targetCanvas, reference);
         newButton.AddClickAction(onAction, offAction);
 

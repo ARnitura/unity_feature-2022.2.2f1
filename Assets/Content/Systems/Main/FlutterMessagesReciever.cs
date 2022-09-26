@@ -15,10 +15,14 @@ public class FlutterMessagesReciever : MonoBehaviour
 
 
     [SerializeField]
-    private HelpMessages helpMessages;
+    private ScanManager helpMessages;
 
     [SerializeField]
     private ARSession session;
+
+
+    [SerializeField]
+    private ARObjectLoader objectLoader;
 
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
     [SerializeField]
@@ -28,13 +32,15 @@ public class FlutterMessagesReciever : MonoBehaviour
 
     private void Start()
     {
-        Application.targetFrameRate = 60;
-        //StartAR();
+        ClearAR();
+        Application.targetFrameRate = 60;//StartAR();
     }
 
     public void StartAR()
     {
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
+
+
         Debug.LogWarning("Start AR call");
 #endif
 
@@ -48,7 +54,7 @@ public class FlutterMessagesReciever : MonoBehaviour
         //objectLoader.ClearObject();
         aRPlaneManager.enabled = true;
         // aRPlaneManager.trackables.
-        helpMessages.ResetState();
+        helpMessages.StartScan();
     }
 
     public void ClearAR() // USED FROM FLUTTER
@@ -92,13 +98,7 @@ public class FlutterMessagesReciever : MonoBehaviour
     }
 
 
-    public void LoadModel(string filePath)
-    {
-        ARObjectLoader.Instance.LoadModel(filePath);
-    }
+    public void LoadModel(string filePath) => objectLoader.LoadModel(filePath);
 
-    public void LoadTexture(string allPath)
-    {
-        ARObjectLoader.Instance.LoadTextures(allPath);
-    }
+    public void LoadTexture(string allPath) => objectLoader.LoadTextures(allPath);
 }

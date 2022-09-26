@@ -62,12 +62,14 @@ public class ARObjectDecorator : MonoBehaviour
 
 
 
-        modelCollider = modelTransform.gameObject.GetComponent<BoxCollider>();
+        modelCollider = modelTransform.GetComponent<BoxCollider>();
 
 
 
         //min corner world space coord
-        Vector3 minCornerPos = modelTransform.position + modelCollider.bounds.min;
+
+
+        Vector3 minCornerPos = modelCollider.bounds.min;
         Vector3 colliderSize = modelCollider.size;
 
         upAxis.position = minCornerPos + Vector3.up * colliderSize.y / 2;
@@ -97,9 +99,31 @@ public class ARObjectDecorator : MonoBehaviour
         rulerRoot.gameObject.SetActive(RulerEnabled);
     }
 
-
-    private float Round1Digit(float value)
+    /*
+    private void OnDrawGizmos()
     {
-        return Mathf.Round(value * 10) / 10;
+        if (modelTransform == null)
+            return;
+
+        modelCollider = modelTransform.GetComponent<BoxCollider>();
+
+
+
+        //min corner world space coord
+
+
+        Vector3 minCornerPos = modelTransform.position + modelCollider.bounds.min + modelCollider.bounds.center;
+        Vector3 colliderSize = modelCollider.size;
+
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(modelCollider.bounds.max, 0.1f);
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(modelCollider.bounds.min, 0.1f);
+        Gizmos.color = Color.cyan;
+        Gizmos.DrawWireSphere(modelCollider.bounds.center, 0.1f);
+
     }
+    */
+
+    private float Round1Digit(float value) => Mathf.Round(value * 10) / 10;
 }

@@ -13,8 +13,9 @@ public class ARObjectPlacer : MonoBehaviour
 {
     //marker
     [SerializeField] private GameObject planeMarker;
-    [SerializeField] private Camera ARCamera;
-    [SerializeField] private ARObjectLoader objectLoader;
+    private Camera cam;
+    [SerializeField]
+    private ARObjectLoader objectLoader;
 
 
     [Header("Model settings")]
@@ -24,15 +25,14 @@ public class ARObjectPlacer : MonoBehaviour
 
 
     [Header("Debug")]
-    [SerializeField] private Transform debugRaycastTransform;
+    //[SerializeField] private Transform debugRaycastTransform;
     [SerializeField] private TextMeshProUGUI debugText;
 
     private ARPlaneManager aRPlaneManager;
     private ARRaycastManager m_RaycastManager;
 
     //private bool objectPlaced = false;
-    private bool isRotating = false;
-    private bool touchLock = false;
+
 
     private Vector2 touchLockPos;
     private Vector3 currentObjectVelocity;
@@ -41,16 +41,23 @@ public class ARObjectPlacer : MonoBehaviour
     private Transform placedTransform = null;
     private Transform modelTransform = null;
 
+    public ARObject Object { get; set; }
 
+    private bool objectPlaced = false;
+    private bool isRotating = false;
+    private bool touchLock = false;
+    private ScanManager scanManager;
 
     public static Action OnRotationStart, OnRotationEnd, OnMoveStart, OnMoveEnd;
 
     private void Awake()
     {
-        // loadModel(testPath);
+        cam = Camera.main;
 
         m_RaycastManager = GetComponent<ARRaycastManager>();
         aRPlaneManager = GetComponent<ARPlaneManager>();
+
+        scanManager = FindObjectOfType<ScanManager>();
 
         OnRotationEnd += OnRotationEndEvent;
         OnMoveEnd += OnMoveEndEvent;
@@ -63,13 +70,14 @@ public class ARObjectPlacer : MonoBehaviour
 
     private void Update()
     {
+
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
         if (Input.GetKeyDown(KeyCode.A))
         {
             PlaceObject(new Vector3(2, 0, 2), Quaternion.identity);
         }
 
-        string spawnedObjectColor = objectLoader.LoadedModelTransform != null ? ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
+        string spawnedObjectColor = objectLoader.ARObject != null ? ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
         string touchColor = ColorUtility.ToHtmlStringRGB(Color.green);
         string touchAppliedColor = TryGetTouchPosition(out Vector2 touchPosition1) ? ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
         bool touchUIBlock = false;
@@ -81,18 +89,29 @@ public class ARObjectPlacer : MonoBehaviour
                 touchUIBlock = true;
                 break;
             }
-        bool verdict = !touchUIBlock && objectLoader.LoadedModelTransform != null && TryGetTouchPosition(out touchPosition1);
+        if (UIUtils.IsPointerOverUIObject())
+        {
+            touchColor = ColorUtility.ToHtmlStringRGB(Color.red);
+            touchUIBlock = true;
+        }
+        bool verdict = !touchUIBlock && objectLoader.ARObject != null && TryGetTouchPosition(out touchPosition1);
         string verdictColor = verdict ? ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
 
         debugText.text = $"Touch conditions:\n" +
-            $"Model loaded? <color=#{spawnedObjectColor}>{objectLoader.LoadedModelTransform != null}</color>\n" +
+            $"Model loaded? <color=#{spawnedObjectColor}>{objectLoader.ARObject != null}</color>\n" +
             $"Pointer(s) is over UI? <color=#{touchColor}>{touchUIBlock}</color>\n" +
             $"At least one touch? <color=#{touchAppliedColor}>{TryGetTouchPosition(out touchPosition1)}</color>\n" +
             $"Can place 3d model? <color=#{verdictColor}>{verdict}</color>";
 
 #endif
-        if (objectLoader.LoadedModelTransform == null)
+
+        if (!scanManager.ScanComplete)
             return;
+
+
+        if (Object == null)
+            return;
+
 
         foreach (Touch touch in Input.touches)
             if (EventSystem.current.IsPointerOverGameObject(touch.fingerId))
@@ -104,14 +123,16 @@ public class ARObjectPlacer : MonoBehaviour
 
 
 
-        if (placedTransform == null)
+        if (!objectPlaced)
         {
             List<ARRaycastHit> hitInfo = new List<ARRaycastHit>();
             if (m_RaycastManager.Raycast(touchPosition, hitInfo, TrackableType.PlaneWithinPolygon))
             {
                 PlaceObject(hitInfo[0].pose.position, hitInfo[0].pose.rotation);
-                EnableVisual();
+                DisableVisual();
+                //EnableVisual();
             }
+            // PlaceObject(planeMarker.transform.position, Quaternion.identity);
         }
         else
         {
@@ -122,16 +143,22 @@ public class ARObjectPlacer : MonoBehaviour
         }
     }
 
+    public void AssignObject(ARObject arObject)
+    {
+        Object = arObject;
+        modelTransform = Object.Model;
+        placedTransform = Object.transform;
+    }
+
     private void PlaceObject(Vector3 pos, Quaternion rot)
     {
 #if UNITY_EDITOR || DEVELOPMENT_BUILD
-        Debug.Log($"Model transform = {objectLoader.LoadedModelTransform.gameObject.name}");
-        Debug.Log($"Placed transform = {objectLoader.LoadedModelTransform.parent.gameObject.name}");
+        // Debug.Log($"Model transform = {objectLoader.LoadedModelTransform.gameObject.name}");
+        //  Debug.Log($"Placed transform = {objectLoader.LoadedModelTransform.parent.gameObject.name}");
 #endif
-        modelTransform = objectLoader.LoadedModelTransform;
-        placedTransform = modelTransform.parent;
 
 
+        objectPlaced = true;
         aRPlaneManager.enabled = false;
         foreach (ARPlane plane in aRPlaneManager.trackables)
             plane.gameObject.SetActive(false);
@@ -145,6 +172,8 @@ public class ARObjectPlacer : MonoBehaviour
         placedTransform.position = pos;
         placedTransformPlaneY = placedTransform.position.y;
         placedTransform.rotation = rot;
+
+
     }
     private void MoveObject()
     {
@@ -158,12 +187,12 @@ public class ARObjectPlacer : MonoBehaviour
             //process touch lock
             if (touch.phase == TouchPhase.Began)
             {
-                Ray ray = ARCamera.ScreenPointToRay(touch.position);
+                Ray ray = cam.ScreenPointToRay(touch.position);
 
                 if (Physics.Raycast(ray, out RaycastHit hitInfo))
                 {
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-                    debugRaycastTransform.position = hitInfo.point;
+                    // debugRaycastTransform.position = hitInfo.point;
 #endif
                     if (hitInfo.collider.transform == modelTransform)
                     {
@@ -194,8 +223,8 @@ public class ARObjectPlacer : MonoBehaviour
             */
 
             //cool movement?
-            Vector3 screenPosition = new Vector3(touch.position.x, touch.position.y, (placedTransform.position - ARCamera.transform.position).magnitude);
-            Vector3 projectedScreen = ARCamera.ScreenToWorldPoint(screenPosition);
+            Vector3 screenPosition = new Vector3(touch.position.x, touch.position.y, (placedTransform.position - cam.transform.position).magnitude);
+            Vector3 projectedScreen = cam.ScreenToWorldPoint(screenPosition);
             Vector3 projectedPosition = new Vector3(projectedScreen.x, placedTransform.position.y, projectedScreen.z);
             Vector3 clampedPosition = Vector3.ClampMagnitude(projectedPosition, 5);
             clampedPosition.y = placedTransformPlaneY;
@@ -250,6 +279,11 @@ public class ARObjectPlacer : MonoBehaviour
             touchPosition = Input.GetTouch(0).position;
             return true;
         }
+        else if (Input.GetKey(KeyCode.Mouse0))
+        {
+            touchPosition = Input.mousePosition;
+            return true;
+        }
 
         if (isRotating)
             OnRotationEnd?.Invoke();
@@ -263,42 +297,22 @@ public class ARObjectPlacer : MonoBehaviour
     }
     public void ResetObject()
     {
-        placedTransform = null;
+        Object = null;
+        objectPlaced = false;
+
         EnableVisual();
     }
-    private void DisableVisual()
-    {
-        planeMarker.SetActive(false);
-    }
-    private void EnableVisual()
-    {
-        planeMarker.SetActive(true);
-    }
+    private void DisableVisual() => planeMarker.SetActive(false);
+    private void EnableVisual() => planeMarker.SetActive(true);
 
 
-    private void OnMoveStartEvent()
-    {
-        StopAllCoroutines();
-        //Debug.Log("OnMoveStart");
-    }
+    private void OnMoveStartEvent() => StopAllCoroutines();//Debug.Log("OnMoveStart");
 
-    private void OnRotationStartEvent()
-    {
-        StopAllCoroutines();
-        // Debug.Log("OnRotationStart");
-    }
+    private void OnRotationStartEvent() => StopAllCoroutines();// Debug.Log("OnRotationStart");
 
-    private void OnMoveEndEvent()
-    {
-        StartCoroutine(TranslateToPlane());
-        // Debug.Log("OnMoveEnd");
-    }
+    private void OnMoveEndEvent() => StartCoroutine(TranslateToPlane());// Debug.Log("OnMoveEnd");
 
-    private void OnRotationEndEvent()
-    {
-        StartCoroutine(TranslateToPlane());
-        // Debug.Log("OnRotationEnd");
-    }
+    private void OnRotationEndEvent() => StartCoroutine(TranslateToPlane());// Debug.Log("OnRotationEnd");
 
     private IEnumerator TranslateToPlane()
     {

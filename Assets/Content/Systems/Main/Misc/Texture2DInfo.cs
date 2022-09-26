@@ -1,9 +1,12 @@
+using Cysharp.Threading.Tasks;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using UnityEngine;
+using UnityEngine.Networking;
 
 public class Texture2DInfo : IDisposable
 {
@@ -146,7 +149,6 @@ public class Texture2DInfo : IDisposable
         {
             Debug.LogError($"Failed to load texture from path: {filePath} - file doesn't exist");
         }
-
         return tex;
     }
 
@@ -156,6 +158,7 @@ public class Texture2DInfo : IDisposable
 
         // note format is now copied from the loaded texture
         Texture2D convertedNormalMap = new Texture2D(loadedNormalMap.width, loadedNormalMap.height, loadedNormalMap.format, true, true);
+
         // the documentation on this function says it's GPU side only, but this is a lie
         // this is roughly equivalent to:
         // convertedNormalMap.SetPixels32(loadedNormalMap.GetPixels32(0), 0);
@@ -176,6 +179,7 @@ public class Texture2DInfo : IDisposable
 
         return result;
     }
+
 
     public void Dispose() => UnityEngine.Object.Destroy(Texture);
 }

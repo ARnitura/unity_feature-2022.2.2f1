@@ -9,14 +9,7 @@ public class TestBehaviour : MonoBehaviour
     private FlutterMessagesReciever messages;
     private string testFolderDir;
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
-    private void Start()
-    {
-
-        testFolderDir = Path.Combine(Directory.GetParent(Application.dataPath).FullName, @"testFolder\");
-        //Debug.Log(Application.dataPath);
-        //Debug.Log(Directory.GetParent(Application.dataPath).FullName);
-        //Debug.Log(testFolderDir);
-    }
+    private void Start() => testFolderDir = Path.Combine(Directory.GetParent(Application.dataPath).FullName, @"testFolder\");//Debug.Log(Application.dataPath);//Debug.Log(Directory.GetParent(Application.dataPath).FullName);//Debug.Log(testFolderDir);
 
     private void Update()
     {
@@ -76,15 +69,9 @@ public class TestBehaviour : MonoBehaviour
 
 
 
-    public void WebLoadModel()
-    {
-        StartCoroutine(WebLoadModelCoroutine());
-    }
+    public void WebLoadModel() => StartCoroutine(WebLoadModelCoroutine());
 
-    public void WebLoadAllTextures()
-    {
-        StartCoroutine(WebLoadAllTexturesCoroutine());
-    }
+    public void WebLoadAllTextures() => StartCoroutine(WebLoadAllTexturesCoroutine());
 
     private IEnumerator WebLoadAllTexturesCoroutine()
     {
