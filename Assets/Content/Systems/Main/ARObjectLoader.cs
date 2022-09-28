@@ -49,6 +49,8 @@ public class ARObjectLoader : MonoBehaviour
         else
             ARObject = Instantiate(arObjectPrefab, Vector3.zero, Quaternion.identity);
 
+        placer.ResetObject();
+
         #region debug
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
         Debug.Log($"Requesting model from {filePath}");

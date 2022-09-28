@@ -1,3 +1,4 @@
+using Lean.Touch;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -132,13 +133,22 @@ public class ARObjectPlacer : MonoBehaviour
                 DisableVisual();
                 //EnableVisual();
             }
+#if UNITY_EDITOR
+            //List<ARRaycastHit> hitInfo = new List<ARRaycastHit>();
+            if (Physics.Raycast(cam.ScreenPointToRay(LeanTouch.Fingers[0].ScreenPosition), out RaycastHit hit))
+            {
+                PlaceObject(hit.point, Quaternion.identity);
+                DisableVisual();
+                //EnableVisual();
+            }
+#endif
             // PlaceObject(planeMarker.transform.position, Quaternion.identity);
         }
         else
         {
-            if (Input.touchCount == 2)
+            if (LeanTouch.Fingers.Count == 2)
                 RotateObject();
-            else if (Input.touchCount == 1 && !isRotating)
+            else if (LeanTouch.Fingers.Count == 1 && !isRotating)
                 MoveObject();
         }
     }
@@ -177,10 +187,30 @@ public class ARObjectPlacer : MonoBehaviour
     }
     private void MoveObject()
     {
-        //get touch count and position
-        Touch touch = Input.GetTouch(0);
-        Vector2 touchPosition = touch.position;
+        if (LeanTouch.Fingers[0].Down)
+        {
+            OnMoveStart?.Invoke();
+        }
+        //uncheck touchLock
+        if (LeanTouch.Fingers[0].Up)
+        {
+            //if (touchLock)
+            OnMoveEnd?.Invoke();
 
+            // touchLock = false;
+        }
+        modelTransform.localPosition = Vector3.SmoothDamp(modelTransform.localPosition, Vector3.up * yUpLength, ref currentModelVelocity, 0.05f);
+
+        //Debug.Log($"delta is {LeanTouch.Fingers[0].ScaledDelta}");
+        if (LeanTouch.Fingers[0].ScaledDelta.sqrMagnitude < 2f)
+        {
+            //Debug.Log($"blocked movement delta is {LeanTouch.Fingers[0].ScaledDelta}");
+            return;
+        }
+        //get touch count and position
+        //Touch touch = Input.GetTouch(0);
+        //Vector2 touchPosition = touch.position;
+        /*
         //check if raycast hits placedTransform and set touchLock
         if (!touchLock)
         {
@@ -204,7 +234,8 @@ public class ARObjectPlacer : MonoBehaviour
                 }
             }
         }
-        else if (isRotating == false) //if we already touched object... and not rotating it
+        else*/
+        //if (isRotating == false) //if we already touched object... and not rotating it
         {
             /*Raycast movement
             //Debug.Log("Move model");
@@ -215,12 +246,21 @@ public class ARObjectPlacer : MonoBehaviour
             selectedObject.transform.position = s_Hits[0].pose.position;
             */
 
-            /* Simple movement
-            Vector2 deltaMove = touch.position - touchLockPos;
-            Vector3 projectedCameraForward = Vector3.ProjectOnPlane(ARCamera.transform.forward, Vector3.up);
+            Vector3 worldDelta = LeanTouch.Fingers[0].GetWorldDelta(Vector3.Distance(placedTransform.position, cam.transform.position), Camera.main);
+            worldDelta = transform.TransformDirection(worldDelta);
+
+
+            Vector3 projectedCameraForward = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up);
             Vector3 rightDirection = -Vector3.Cross(projectedCameraForward, Vector3.up);
-            placedTransform.position += projectedCameraForward * touch.deltaPosition.y * 0.001f + rightDirection * touch.deltaPosition.x * 0.001f;
-            */
+            //placedTransform.position += projectedCameraForward * deltaMove.y * 0.001f + rightDirection * deltaMove.x * 0.001f;
+            Vector3 desiredPosition = placedTransform.position + rightDirection * worldDelta.x + projectedCameraForward * worldDelta.y;// projectedCameraForward * touch.deltaPosition.y * 0.005f + rightDirection * touch.deltaPosition.x * 0.005f;
+            Vector3 clampedPosition = Vector3.ClampMagnitude(desiredPosition, 15);
+            clampedPosition.y = placedTransformPlaneY;
+
+
+            placedTransform.position = clampedPosition;
+            /*
+
 
             //cool movement?
             Vector3 screenPosition = new Vector3(touch.position.x, touch.position.y, (placedTransform.position - cam.transform.position).magnitude);
@@ -231,28 +271,20 @@ public class ARObjectPlacer : MonoBehaviour
 
             placedTransform.position = Vector3.SmoothDamp(placedTransform.position, clampedPosition, ref currentObjectVelocity, 0.05f);
             modelTransform.localPosition = Vector3.SmoothDamp(modelTransform.localPosition, Vector3.up * yUpLength, ref currentModelVelocity, 0.05f);
-
+            */
 
         }
 
-        //uncheck touchLock
-        if (touch.phase == TouchPhase.Ended)
-        {
-            if (touchLock)
-                OnMoveEnd?.Invoke();
-
-            touchLock = false;
-        }
 
 
     }
     private void RotateObject()
     {
         //get finger and angle
-        List<Lean.Touch.LeanFinger> finger = Lean.Touch.LeanTouch.Fingers;
-        float twistDegrees = Lean.Touch.LeanGesture.GetTwistDegrees(finger) * 1;
-        Touch touch1 = Input.touches[0];
-        Touch touch2 = Input.touches[1];
+        //List<Lean.Touch.LeanFinger> finger = Lean.Touch.LeanTouch.Fingers;
+        float twistDegrees = LeanGesture.GetTwistDegrees();
+        //Touch touch1 = Input.touches[0];
+        //Touch touch2 = Input.touches[1];
 
         //rotate object
         placedTransform.Rotate(modelRotationAxis, twistDegrees);
@@ -274,17 +306,18 @@ public class ARObjectPlacer : MonoBehaviour
 
     private bool TryGetTouchPosition(out Vector2 touchPosition)
     {
-        if (Input.touchCount > 0)
+        if (LeanTouch.Fingers.Count > 0)
         {
-            touchPosition = Input.GetTouch(0).position;
+            touchPosition = LeanTouch.Fingers[0].ScreenPosition;
             return true;
         }
+        /*
         else if (Input.GetKey(KeyCode.Mouse0))
         {
             touchPosition = Input.mousePosition;
             return true;
         }
-
+        */
         if (isRotating)
             OnRotationEnd?.Invoke();
 
@@ -297,6 +330,7 @@ public class ARObjectPlacer : MonoBehaviour
     }
     public void ResetObject()
     {
+        StopAllCoroutines();
         Object = null;
         objectPlaced = false;
 

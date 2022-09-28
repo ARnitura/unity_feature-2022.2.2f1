@@ -12,6 +12,7 @@ public abstract class UIWorldMapper<T> : MonoBehaviour where T : Component
     [SerializeField]
     protected Vector3 _offset;
     private bool _camOrth;
+    private Transform canvasTransform;
 
     public virtual void Init(Canvas targetCanvas, T reference)
     {
@@ -19,6 +20,7 @@ public abstract class UIWorldMapper<T> : MonoBehaviour where T : Component
         _targetCamera = Camera.main;
         _uiPointWorld = GetComponent<RectTransform>();
         _planeDistance = targetCanvas.planeDistance;
+        canvasTransform = targetCanvas.transform;
 
         if (_targetCamera.orthographic)
             _camOrth = true;
@@ -41,9 +43,9 @@ public abstract class UIWorldMapper<T> : MonoBehaviour where T : Component
         Vector3 canvasPos = _targetCamera.ScreenToWorldPoint((Vector3)screenPos + new Vector3(0, 0, _planeDistance));
 
         if (!_camOrth)
-            _uiPointWorld.localPosition = transform.parent.InverseTransformPoint(canvasPos);
+            _uiPointWorld.localPosition = canvasTransform.InverseTransformPoint(canvasPos);
         else
-            _uiPointWorld.localPosition = transform.parent.InverseTransformPoint(canvasPos) / _targetCamera.orthographicSize;
+            _uiPointWorld.localPosition = canvasTransform.InverseTransformPoint(canvasPos) / _targetCamera.orthographicSize;
 
         Vector3 localPosition = _uiPointWorld.localPosition;
         localPosition = new Vector3(localPosition.x, localPosition.y, 0);

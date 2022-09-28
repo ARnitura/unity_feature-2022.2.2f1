@@ -47,6 +47,7 @@ public class ARObject : MonoBehaviour
 
     public void Clear()
     {
+        transform.rotation = Quaternion.Euler(0, 0, 0);
         WorldPosButtonsManager.Instance.RemoveButton(Model);
         animationClips = new List<string>();
 

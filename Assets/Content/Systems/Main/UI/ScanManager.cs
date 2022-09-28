@@ -1,13 +1,15 @@
 using Cysharp.Threading.Tasks;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
 
 public class ScanManager : MonoBehaviour
 {
-    public ARPlaneManager planeManager;
+    [SerializeField]
+    private ARPlaneManager planeManager;
 
     [SerializeField]
     private Image raycastBlocker;
@@ -26,19 +28,23 @@ public class ScanManager : MonoBehaviour
 
     [SerializeField]
     private int targetUpdatesCount = 3;
+    [SerializeField]
+    private int targetPlanesCount = 3;
+    private int currentPlanesCount = 0;
     private int currentUpdatesCount = 0;
 
 
     public bool ScanComplete { get; private set; } = false;
-    public bool scanCompleteInternal = false;
-
+    private bool scanCompleteInternal = false;
+    private List<ARPlane> addedPlanes = new List<ARPlane>();
 
     // Start is called before the first frame update
     private void Start()
     {
         // ARSession.stateChanged += ARSession_stateChanged;
+
         planeManager.planesChanged += PlaneManager_planesChanged;
-        scanSlider.maxValue = targetUpdatesCount;
+        scanSlider.maxValue = targetPlanesCount + targetUpdatesCount;
 
         helpEndGroup.blocksRaycasts = false;
         helpStartGroup.blocksRaycasts = false;
@@ -46,7 +52,7 @@ public class ScanManager : MonoBehaviour
         helpEndGroup.alpha = 0;
         helpStartGroup.alpha = 0;
         scanSlider.value = 0;
-        currentUpdatesCount = 0;
+        currentPlanesCount = 0;
         ScanComplete = false;
         raycastBlocker.enabled = false;
 
@@ -66,7 +72,7 @@ public class ScanManager : MonoBehaviour
         helpEndGroup.alpha = 0;
         helpStartGroup.LeanAlpha(1, 0.25f).setEaseInOutExpo();
         scanSlider.value = 0;
-        currentUpdatesCount = 0;
+        currentPlanesCount = 0;
         ScanComplete = false;
         scanCompleteInternal = false;
         raycastBlocker.enabled = true;
@@ -78,6 +84,7 @@ public class ScanManager : MonoBehaviour
 
     private async UniTask EndScan()
     {
+        addedPlanes.Clear();
         scanCompleteInternal = true;
         scanEndButton.enabled = true;
 
@@ -122,7 +129,8 @@ public class ScanManager : MonoBehaviour
         if (scanCompleteInternal)
             return;
 
-        if (currentUpdatesCount >= targetUpdatesCount)
+
+        if (currentPlanesCount >= targetPlanesCount && currentUpdatesCount >= targetUpdatesCount)
         {
             EndScan().Forget();
         }
@@ -131,11 +139,30 @@ public class ScanManager : MonoBehaviour
 
             helpStartGroup.enabled = true;
 
-            currentUpdatesCount++;
+            foreach (var item in obj.added)
+            {
+                addedPlanes.Add(item);
+                item.boundaryChanged += Item_boundaryChanged;
+            }
+            currentPlanesCount += obj.added.Count;
+            currentPlanesCount -= obj.removed.Count;
+
+            if (currentPlanesCount > targetPlanesCount)
+                currentPlanesCount = targetPlanesCount;
 
             UpdateSlider().Forget();
         }
 
+    }
+
+    private void Item_boundaryChanged(ARPlaneBoundaryChangedEventArgs obj)
+    {
+        if (scanCompleteInternal)
+            return;
+
+        currentUpdatesCount++;
+
+        UpdateSlider().Forget();
     }
 
     private async UniTask UpdateSlider()
@@ -146,7 +173,7 @@ public class ScanManager : MonoBehaviour
         while (t < 1)
         {
             t += Time.deltaTime / duration;
-            scanSlider.value = Mathf.SmoothStep(startValue, currentUpdatesCount, t);
+            scanSlider.value = Mathf.SmoothStep(startValue, currentPlanesCount + currentUpdatesCount, t);
             await UniTask.Yield();
         }
     }
