@@ -84,6 +84,9 @@ public class ScanManager : MonoBehaviour
 
     private async UniTask EndScan()
     {
+        foreach (var item in addedPlanes)
+            item.boundaryChanged -= Item_boundaryChanged;
+
         addedPlanes.Clear();
         scanCompleteInternal = true;
         scanEndButton.enabled = true;
