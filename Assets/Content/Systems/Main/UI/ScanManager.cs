@@ -2,6 +2,7 @@ using Cysharp.Threading.Tasks;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.XR.ARFoundation;
@@ -25,11 +26,15 @@ public class ScanManager : MonoBehaviour
     [SerializeField]
     private Button scanEndButton;
 
-
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+    [SerializeField]
+    private TextMeshProUGUI debugText;
+#endif
     [SerializeField]
     private int targetUpdatesCount = 3;
     [SerializeField]
     private int targetPlanesCount = 3;
+
     private int currentPlanesCount = 0;
     private int currentUpdatesCount = 0;
 
@@ -53,6 +58,7 @@ public class ScanManager : MonoBehaviour
         helpStartGroup.alpha = 0;
         scanSlider.value = 0;
         currentPlanesCount = 0;
+        currentUpdatesCount = 0;
         ScanComplete = false;
         raycastBlocker.enabled = false;
 
@@ -72,11 +78,15 @@ public class ScanManager : MonoBehaviour
         helpEndGroup.alpha = 0;
         helpStartGroup.LeanAlpha(1, 0.25f).setEaseInOutExpo();
         scanSlider.value = 0;
-        currentPlanesCount = 0;
+
         ScanComplete = false;
         scanCompleteInternal = false;
         raycastBlocker.enabled = true;
         scanEndButton.enabled = false;
+
+
+        currentPlanesCount = 0;
+        currentUpdatesCount = 0;
 
         //Debug.Log($"planeManager {(planeManager.enabled ? "online" : "offline") }");
         FindObjectOfType<PlacementIndicator>(true).gameObject.SetActive(false);
@@ -182,10 +192,10 @@ public class ScanManager : MonoBehaviour
     }
 
 
-
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
     private void Update()
     {
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+
         if (Input.GetKeyDown(KeyCode.Z))
         {
             StartScan();
@@ -194,6 +204,11 @@ public class ScanManager : MonoBehaviour
         {
             EndScan().Forget();
         }
-#endif
+
+        debugText.text = $"Planes: {currentPlanesCount}/{targetPlanesCount}\n" +
+                         $"Updates: {currentUpdatesCount}/{targetUpdatesCount}";
+
     }
+
+#endif
 }
