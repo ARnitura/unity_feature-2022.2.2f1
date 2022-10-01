@@ -47,14 +47,14 @@ public class FlutterMessagesReciever : MonoBehaviour
         Application.targetFrameRate = 60;
 #if !UNITY_EDITOR
         session.subsystem.Start();
-        aRPlaneManager.subsystem.Start();
+        
 #endif
         objectPlacer.ResetObject();
         //objectPlacer.EnableVisual();
         //objectLoader.ClearObject();
-        aRPlaneManager.enabled = true;
+        //aRPlaneManager.enabled = true;
         // aRPlaneManager.trackables.
-        helpMessages.StartScan();
+        //helpMessages.StartScan();
     }
 
     public void ClearAR() // USED FROM FLUTTER
@@ -98,7 +98,13 @@ public class FlutterMessagesReciever : MonoBehaviour
     }
 
 
-    public void LoadModel(string filePath) => objectLoader.LoadModel(filePath);
+    public void LoadModel(string filePath)
+    {
+        objectLoader.LoadModel(filePath);
+    }
 
-    public void LoadTexture(string allPath) => objectLoader.LoadTextures(allPath);
+    public void LoadTexture(string allPath)
+    {
+        objectLoader.LoadTextures(allPath);
+    }
 }

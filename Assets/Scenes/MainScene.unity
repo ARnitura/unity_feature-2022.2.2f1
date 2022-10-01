@@ -4814,7 +4814,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 761582679}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -3.19, z: 0}
+  m_LocalPosition: {x: 0, y: -0.1, z: 0}
   m_LocalScale: {x: 104.88486, y: 104.88486, z: 104.88486}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -5509,8 +5509,10 @@ MonoBehaviour:
   scanSlider: {fileID: 1884106073}
   scanEndButton: {fileID: 1829052253}
   debugText: {fileID: 888323257}
-  targetUpdatesCount: 10
-  targetPlanesCount: 1
+  androidTargetUpdatesCount: 10
+  androidTargetPlanesCount: 1
+  iosTargetUpdatesCount: 20
+  iosTargetPlanesCount: 1
 --- !u!1001 &846444252
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -5718,7 +5720,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
+  m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
   m_OnCullStateChanged:
@@ -7315,7 +7317,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1260578604}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
   m_Name: 

@@ -124,6 +124,8 @@ public class ARObjectLoader : MonoBehaviour
 #if DEVELOPMENT_BUILD || UNITY_EDITOR
     public void DebugStandaloneLoadModel()
     {
+        FindObjectOfType<FlutterMessagesReciever>().StartAR();
+
         if (ARObject != null)
             ARObject.Clear();
         else
@@ -133,11 +135,11 @@ public class ARObjectLoader : MonoBehaviour
         model.SetParent(ARObject.transform);
         ARObject.Init(model, decorator);
 
-        FindObjectOfType<FlutterMessagesReciever>().StartAR();
+
         placer.AssignObject(ARObject);
 
         modelLoaded = true;
-        //messages.StartScan();
+        messages.StartScan();
         Debug.LogWarning("Loaded model from resources");
     }
 #endif

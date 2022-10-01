@@ -30,9 +30,22 @@ public class ScanManager : MonoBehaviour
     [SerializeField]
     private TextMeshProUGUI debugText;
 #endif
+
+    [Header("Android")]
     [SerializeField]
+    private int androidTargetUpdatesCount = 10;
+    [SerializeField]
+    private int androidTargetPlanesCount = 1;
+
+    [Header("IOS")]
+    [SerializeField]
+    private int iosTargetUpdatesCount = 20;
+    [SerializeField]
+    private int iosTargetPlanesCount = 1;
+
+    //[SerializeField]
     private int targetUpdatesCount = 3;
-    [SerializeField]
+    //[SerializeField]
     private int targetPlanesCount = 3;
 
     private int currentPlanesCount = 0;
@@ -48,8 +61,8 @@ public class ScanManager : MonoBehaviour
     {
         // ARSession.stateChanged += ARSession_stateChanged;
 
-        planeManager.planesChanged += PlaneManager_planesChanged;
-        scanSlider.maxValue = targetPlanesCount + targetUpdatesCount;
+
+
 
         helpEndGroup.blocksRaycasts = false;
         helpStartGroup.blocksRaycasts = false;
@@ -59,7 +72,6 @@ public class ScanManager : MonoBehaviour
         scanSlider.value = 0;
         currentPlanesCount = 0;
         currentUpdatesCount = 0;
-        ScanComplete = false;
         raycastBlocker.enabled = false;
 
 
@@ -73,6 +85,8 @@ public class ScanManager : MonoBehaviour
 
     public void StartScan()
     {
+        planeManager.planesChanged += PlaneManager_planesChanged;
+
         helpEndGroup.blocksRaycasts = false;
         helpStartGroup.blocksRaycasts = true;
         helpEndGroup.alpha = 0;
@@ -84,10 +98,23 @@ public class ScanManager : MonoBehaviour
         raycastBlocker.enabled = true;
         scanEndButton.enabled = false;
 
+        planeManager.enabled = true;
+#if !UNITY_EDITOR
+        planeManager.subsystem.Start();
+#endif
 
         currentPlanesCount = 0;
         currentUpdatesCount = 0;
 
+#if UNITY_IOS
+        targetUpdatesCount = iosTargetUpdatesCount;
+        targetPlanesCount = iosTargetPlanesCount;
+#elif UNITY_ANDROID
+        targetUpdatesCount = androidTargetUpdatesCount;
+        targetPlanesCount = androidTargetPlanesCount;
+#endif
+
+        scanSlider.maxValue = targetPlanesCount + targetUpdatesCount;
         //Debug.Log($"planeManager {(planeManager.enabled ? "online" : "offline") }");
         FindObjectOfType<PlacementIndicator>(true).gameObject.SetActive(false);
     }
@@ -98,6 +125,16 @@ public class ScanManager : MonoBehaviour
             item.boundaryChanged -= Item_boundaryChanged;
 
         addedPlanes.Clear();
+
+        planeManager.planesChanged -= PlaneManager_planesChanged;
+
+        planeManager.enabled = false;
+
+#if !UNITY_EDITOR
+        planeManager.subsystem.Stop();
+#endif
+
+
         scanCompleteInternal = true;
         scanEndButton.enabled = true;
 

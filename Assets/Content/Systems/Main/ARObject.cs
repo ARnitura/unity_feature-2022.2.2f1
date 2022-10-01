@@ -34,6 +34,7 @@ public class ARObject : MonoBehaviour
     {
         Model = modelTransform;
         Model.localPosition = Vector3.zero;
+        Model.localRotation = Quaternion.identity;
         modelRenderers = Model.GetComponentsInChildren<Renderer>();
 
 
@@ -48,6 +49,8 @@ public class ARObject : MonoBehaviour
     public void Clear()
     {
         transform.rotation = Quaternion.Euler(0, 0, 0);
+        transform.position = Vector3.zero;
+
         WorldPosButtonsManager.Instance.RemoveButton(Model);
         animationClips = new List<string>();
 
