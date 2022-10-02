@@ -26,7 +26,7 @@ public class ScanManager : MonoBehaviour
     [SerializeField]
     private Button scanEndButton;
 
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || true
     [SerializeField]
     private TextMeshProUGUI debugText;
 #endif
@@ -229,7 +229,7 @@ public class ScanManager : MonoBehaviour
     }
 
 
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if true || UNITY_EDITOR
     private void Update()
     {
 

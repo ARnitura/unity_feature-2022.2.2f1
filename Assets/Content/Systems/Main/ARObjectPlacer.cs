@@ -72,7 +72,7 @@ public class ARObjectPlacer : MonoBehaviour
     private void Update()
     {
 
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if true || UNITY_EDITOR
         if (Input.GetKeyDown(KeyCode.A))
         {
             PlaceObject(new Vector3(2, 0, 2), Quaternion.identity);
@@ -146,9 +146,9 @@ public class ARObjectPlacer : MonoBehaviour
         }
         else
         {
-            if (LeanTouch.Fingers.Count == 2)
+            if (LeanTouch.Fingers.Count == 2 || Input.touchCount == 2)
                 RotateObject();
-            else if (LeanTouch.Fingers.Count == 1 && !isRotating)
+            else if ((LeanTouch.Fingers.Count == 1 || Input.touchCount == 1) && !isRotating)
                 MoveObject();
         }
     }
@@ -162,7 +162,7 @@ public class ARObjectPlacer : MonoBehaviour
 
     private void PlaceObject(Vector3 pos, Quaternion rot)
     {
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
+#if UNITY_EDITOR || true
         // Debug.Log($"Model transform = {objectLoader.LoadedModelTransform.gameObject.name}");
         //  Debug.Log($"Placed transform = {objectLoader.LoadedModelTransform.parent.gameObject.name}");
 #endif
@@ -187,12 +187,12 @@ public class ARObjectPlacer : MonoBehaviour
     }
     private void MoveObject()
     {
-        if (LeanTouch.Fingers[0].Down)
+        if (LeanTouch.Fingers[0].Down || Input.GetTouch(0).phase == TouchPhase.Began)
         {
             OnMoveStart?.Invoke();
         }
         //uncheck touchLock
-        if (LeanTouch.Fingers[0].Up)
+        if (LeanTouch.Fingers[0].Up || Input.GetTouch(0).phase == TouchPhase.Ended)
         {
             //if (touchLock)
             OnMoveEnd?.Invoke();
@@ -202,78 +202,65 @@ public class ARObjectPlacer : MonoBehaviour
         modelTransform.localPosition = Vector3.SmoothDamp(modelTransform.localPosition, Vector3.up * yUpLength, ref currentModelVelocity, 0.05f);
 
         //Debug.Log($"delta is {LeanTouch.Fingers[0].ScaledDelta}");
+
+        //WTF
+        /*
         if (LeanTouch.Fingers[0].ScaledDelta.sqrMagnitude < 2f)
         {
             //Debug.Log($"blocked movement delta is {LeanTouch.Fingers[0].ScaledDelta}");
             return;
         }
-        //get touch count and position
-        //Touch touch = Input.GetTouch(0);
-        //Vector2 touchPosition = touch.position;
+        */
+
+
+
+
+        /*Raycast movement
+        //Debug.Log("Move model");
+
+        //get object and transform position
+        m_RaycastManager.Raycast(touchPosition, s_Hits, TrackableType.Planes);
+        selectedObject = placedTransform.gameObject;
+        selectedObject.transform.position = s_Hits[0].pose.position;
+        */
+
+        Vector3 worldDelta = LeanTouch.Fingers[0].GetWorldDelta(Vector3.Distance(placedTransform.position, cam.transform.position), Camera.main);
+        worldDelta = transform.TransformDirection(worldDelta);
+
+
+        Vector3 screenPos = Input.GetTouch(0).position;
+        Vector3 screenDelta = Input.GetTouch(0).deltaPosition;
+
+        float distance = Vector3.Distance(placedTransform.position, cam.transform.position);
+        Vector3 worldPos1 = cam.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, distance));
+        Vector3 worldPos2 = cam.ScreenToWorldPoint(new Vector3(screenPos.x - screenDelta.x, screenPos.y - screenDelta.y, distance));
+        worldDelta = worldPos1 - worldPos2;
+        worldDelta = transform.TransformDirection(worldDelta);
+
+        Vector3 projectedCameraForward = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up);
+        Vector3 rightDirection = -Vector3.Cross(projectedCameraForward, Vector3.up);
+        //placedTransform.position += projectedCameraForward * deltaMove.y * 0.001f + rightDirection * deltaMove.x * 0.001f;
+        Vector3 desiredPosition = placedTransform.position + rightDirection * worldDelta.x + projectedCameraForward * worldDelta.y;// projectedCameraForward * touch.deltaPosition.y * 0.005f + rightDirection * touch.deltaPosition.x * 0.005f;
+        Vector3 clampedPosition = Vector3.ClampMagnitude(desiredPosition, 15);
+        clampedPosition.y = placedTransformPlaneY;
+
+
+        placedTransform.position = clampedPosition;
         /*
-        //check if raycast hits placedTransform and set touchLock
-        if (!touchLock)
-        {
-            //process touch lock
-            if (touch.phase == TouchPhase.Began)
-            {
-                Ray ray = cam.ScreenPointToRay(touch.position);
-
-                if (Physics.Raycast(ray, out RaycastHit hitInfo))
-                {
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
-                    // debugRaycastTransform.position = hitInfo.point;
-#endif
-                    if (hitInfo.collider.transform == modelTransform)
-                    {
-                        touchLock = true;
-                        touchLockPos = touch.position;
-
-                        OnMoveStart?.Invoke();
-                    }
-                }
-            }
-        }
-        else*/
-        //if (isRotating == false) //if we already touched object... and not rotating it
-        {
-            /*Raycast movement
-            //Debug.Log("Move model");
-
-            //get object and transform position
-            m_RaycastManager.Raycast(touchPosition, s_Hits, TrackableType.Planes);
-            selectedObject = placedTransform.gameObject;
-            selectedObject.transform.position = s_Hits[0].pose.position;
-            */
-
-            Vector3 worldDelta = LeanTouch.Fingers[0].GetWorldDelta(Vector3.Distance(placedTransform.position, cam.transform.position), Camera.main);
-            worldDelta = transform.TransformDirection(worldDelta);
 
 
-            Vector3 projectedCameraForward = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up);
-            Vector3 rightDirection = -Vector3.Cross(projectedCameraForward, Vector3.up);
-            //placedTransform.position += projectedCameraForward * deltaMove.y * 0.001f + rightDirection * deltaMove.x * 0.001f;
-            Vector3 desiredPosition = placedTransform.position + rightDirection * worldDelta.x + projectedCameraForward * worldDelta.y;// projectedCameraForward * touch.deltaPosition.y * 0.005f + rightDirection * touch.deltaPosition.x * 0.005f;
-            Vector3 clampedPosition = Vector3.ClampMagnitude(desiredPosition, 15);
-            clampedPosition.y = placedTransformPlaneY;
+        //cool movement?
+        Vector3 screenPosition = new Vector3(touch.position.x, touch.position.y, (placedTransform.position - cam.transform.position).magnitude);
+        Vector3 projectedScreen = cam.ScreenToWorldPoint(screenPosition);
+        Vector3 projectedPosition = new Vector3(projectedScreen.x, placedTransform.position.y, projectedScreen.z);
+        Vector3 clampedPosition = Vector3.ClampMagnitude(projectedPosition, 5);
+        clampedPosition.y = placedTransformPlaneY;
+
+        placedTransform.position = Vector3.SmoothDamp(placedTransform.position, clampedPosition, ref currentObjectVelocity, 0.05f);
+        modelTransform.localPosition = Vector3.SmoothDamp(modelTransform.localPosition, Vector3.up * yUpLength, ref currentModelVelocity, 0.05f);
+        */
 
 
-            placedTransform.position = clampedPosition;
-            /*
-
-
-            //cool movement?
-            Vector3 screenPosition = new Vector3(touch.position.x, touch.position.y, (placedTransform.position - cam.transform.position).magnitude);
-            Vector3 projectedScreen = cam.ScreenToWorldPoint(screenPosition);
-            Vector3 projectedPosition = new Vector3(projectedScreen.x, placedTransform.position.y, projectedScreen.z);
-            Vector3 clampedPosition = Vector3.ClampMagnitude(projectedPosition, 5);
-            clampedPosition.y = placedTransformPlaneY;
-
-            placedTransform.position = Vector3.SmoothDamp(placedTransform.position, clampedPosition, ref currentObjectVelocity, 0.05f);
-            modelTransform.localPosition = Vector3.SmoothDamp(modelTransform.localPosition, Vector3.up * yUpLength, ref currentModelVelocity, 0.05f);
-            */
-
-        }
 
 
 
@@ -311,6 +298,12 @@ public class ARObjectPlacer : MonoBehaviour
             touchPosition = LeanTouch.Fingers[0].ScreenPosition;
             return true;
         }
+
+        if (Input.touchCount > 0)
+        {
+            touchPosition = Input.GetTouch(0).position;
+            return true;
+        }
         /*
         else if (Input.GetKey(KeyCode.Mouse0))
         {
@@ -336,17 +329,35 @@ public class ARObjectPlacer : MonoBehaviour
 
         EnableVisual();
     }
-    private void DisableVisual() => planeMarker.SetActive(false);
-    private void EnableVisual() => planeMarker.SetActive(true);
+    private void DisableVisual()
+    {
+        planeMarker.SetActive(false);
+    }
 
+    private void EnableVisual()
+    {
+        planeMarker.SetActive(true);
+    }
 
-    private void OnMoveStartEvent() => StopAllCoroutines();//Debug.Log("OnMoveStart");
+    private void OnMoveStartEvent()
+    {
+        StopAllCoroutines();//Debug.Log("OnMoveStart");
+    }
 
-    private void OnRotationStartEvent() => StopAllCoroutines();// Debug.Log("OnRotationStart");
+    private void OnRotationStartEvent()
+    {
+        StopAllCoroutines();// Debug.Log("OnRotationStart");
+    }
 
-    private void OnMoveEndEvent() => StartCoroutine(TranslateToPlane());// Debug.Log("OnMoveEnd");
+    private void OnMoveEndEvent()
+    {
+        StartCoroutine(TranslateToPlane());// Debug.Log("OnMoveEnd");
+    }
 
-    private void OnRotationEndEvent() => StartCoroutine(TranslateToPlane());// Debug.Log("OnRotationEnd");
+    private void OnRotationEndEvent()
+    {
+        StartCoroutine(TranslateToPlane());// Debug.Log("OnRotationEnd");
+    }
 
     private IEnumerator TranslateToPlane()
     {

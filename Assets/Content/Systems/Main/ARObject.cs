@@ -67,49 +67,50 @@ public class ARObject : MonoBehaviour
     private void LoadAnimations()
     {
         Animation anim = Model.GetComponentInChildren<Animation>();
-        if (anim)
+        if (anim == null)
+            return;
+
+        //stop all movements and get animation clips info
+        anim.playAutomatically = false;
+        anim.Stop();
+        anim.Rewind();
+        anim.wrapMode = WrapMode.Once;
+        anim.clip = null;
+
+
+
+        string activateClip = "";
+        string deactivateClip = "";
+
+
+        //TODO: move parser logic
+        foreach (AnimationState item in anim)
         {
-            //stop all movements and get animation clips info
-            anim.playAutomatically = false;
-            anim.Stop();
-            anim.Rewind();
-            anim.wrapMode = WrapMode.Once;
-            anim.clip = null;
-
-
-
-            string activateClip = "";
-            string deactivateClip = "";
-
-
-            //TODO: move parser logic
-            foreach (AnimationState item in anim)
+            animationClips.Add(item.name);
+            if (item.name.ToLower().Contains("unfold"))
             {
-                animationClips.Add(item.name);
-                if (item.name.ToLower().Contains("unfold"))
-                {
-                    activateClip = item.name;
-                    continue;
-                }
-                else if (item.name.ToLower().Contains("fold"))
-                {
-                    deactivateClip = item.name;
-                }
+                activateClip = item.name;
+                continue;
             }
-
-
-
-            WorldPosButtonsManager.Instance.AddToggleButton(Model, () =>
+            else if (item.name.ToLower().Contains("fold"))
             {
-                anim.Play(activateClip, PlayMode.StopSameLayer);
+                deactivateClip = item.name;
             }
-                , () =>
-                {
-                    anim.Play(deactivateClip, PlayMode.StopSameLayer);
-                });
-
-            //create animation button
         }
+
+
+
+        WorldPosButtonsManager.Instance.AddToggleButton(Model, () =>
+        {
+            anim.Play(activateClip, PlayMode.StopSameLayer);
+        }
+            , () =>
+            {
+                anim.Play(deactivateClip, PlayMode.StopSameLayer);
+            });
+
+        //create animation button
+
     }
     public void ApplyTextures(List<Texture2DInfo> textures)
     {
@@ -134,7 +135,7 @@ public class ARObject : MonoBehaviour
 
         #region DEBUG
 
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if true || UNITY_EDITOR
         int appliedTexturesCount = textures.Where(i => i.WasApplied).Count();
         if (appliedTexturesCount != textures.Count)
         {
@@ -243,7 +244,7 @@ public class ARObject : MonoBehaviour
         modelCollider.center = resultingBounds.center;
         modelCollider.size = resultingBounds.size;
 
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if true || UNITY_EDITOR
         Transform debugCollider = Instantiate(colliderDebugPrefab, transform.position, transform.rotation);
         debugCollider.SetParent(transform);
         debugCollider.position = transform.position + resultingBounds.center;

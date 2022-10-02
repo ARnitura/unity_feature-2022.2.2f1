@@ -52,7 +52,7 @@ public class ARObjectLoader : MonoBehaviour
         placer.ResetObject();
 
         #region debug
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if true || UNITY_EDITOR
         Debug.Log($"Requesting model from {filePath}");
 
         if (!File.Exists(filePath))
@@ -77,7 +77,7 @@ public class ARObjectLoader : MonoBehaviour
     }
     private void OnModelLoaded(AssetLoaderContext assetLoaderContext)
     {
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if true || UNITY_EDITOR
         if (assetLoaderContext.RootGameObject.transform == null)
         {
             Debug.LogError($"Loaded root gameobject is null (check path to model)");
@@ -92,7 +92,7 @@ public class ARObjectLoader : MonoBehaviour
         messages.StartScan();
         placer.AssignObject(ARObject);
 
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if true || UNITY_EDITOR
         Debug.LogWarning($"Model loaded <{assetLoaderContext.RootGameObject.name}>");
 #endif
     }
@@ -107,7 +107,7 @@ public class ARObjectLoader : MonoBehaviour
         await Resources.UnloadUnusedAssets();
 
         #region DEBUG
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if true || UNITY_EDITOR
         Debug.Log($"Requesting textures from {allPath}");
         if (!modelLoaded)
         {
@@ -121,7 +121,7 @@ public class ARObjectLoader : MonoBehaviour
         ARObject.ApplyTextures(loadedTextures);
     }
 
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if true || UNITY_EDITOR
     public void DebugStandaloneLoadModel()
     {
         FindObjectOfType<FlutterMessagesReciever>().StartAR();

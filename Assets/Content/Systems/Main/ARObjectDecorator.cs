@@ -25,7 +25,7 @@ public class ARObjectDecorator : MonoBehaviour
     {
         RulerEnabled = !RulerEnabled;
         rulerRoot?.gameObject.SetActive(RulerEnabled);
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if true || UNITY_EDITOR
         Debug.LogWarning("Ruler " + (RulerEnabled ? "on" : "off"));
 #endif
     }
@@ -125,5 +125,8 @@ public class ARObjectDecorator : MonoBehaviour
     }
     */
 
-    private float Round1Digit(float value) => Mathf.Round(value * 10) / 10;
+    private float Round1Digit(float value)
+    {
+        return Mathf.Round(value * 10) / 10;
+    }
 }

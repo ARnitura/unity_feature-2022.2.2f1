@@ -24,7 +24,7 @@ public class FlutterMessagesReciever : MonoBehaviour
     [SerializeField]
     private ARObjectLoader objectLoader;
 
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if true || UNITY_EDITOR
     [SerializeField]
     [Header("Debug")]
     private TextMeshProUGUI debugText;
@@ -38,7 +38,7 @@ public class FlutterMessagesReciever : MonoBehaviour
 
     public void StartAR()
     {
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if true || UNITY_EDITOR
 
 
         Debug.LogWarning("Start AR call");
@@ -61,7 +61,7 @@ public class FlutterMessagesReciever : MonoBehaviour
     {
 
         //StartAR();
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if true || UNITY_EDITOR
         Debug.LogWarning("Clear AR call");
 #endif
 
@@ -90,7 +90,7 @@ public class FlutterMessagesReciever : MonoBehaviour
 
     private void Update()
     {
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if true || UNITY_EDITOR
         string planeDetectionColor = aRPlaneManager.enabled ? ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
         debugText.text = $"AR Plane Detection: <color=#{planeDetectionColor}>{aRPlaneManager.enabled}</color>\n" +
                          $"AR Plane trackables: {aRPlaneManager.trackables.count}";

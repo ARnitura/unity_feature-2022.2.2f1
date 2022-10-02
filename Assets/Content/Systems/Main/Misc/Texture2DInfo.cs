@@ -43,7 +43,7 @@ public class Texture2DInfo : IDisposable
         string typeName = nameParts[nameParts.Length - 1].ToLower();
         typeName.Trim();
 
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if true || UNITY_EDITOR
         if (typeName.Any(char.IsDigit))
             Debug.LogWarning($"Texture type contains digits! This is not allowed!\nTexture: {MaterialName}_{typeName}.???");
 #endif
@@ -82,7 +82,7 @@ public class Texture2DInfo : IDisposable
                 break;
         }
 
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if true || UNITY_EDITOR
         if (Type == TextureType.Invalid)
         {
             Debug.LogError($"Couldn't parse texture type\nMaterial<{MaterialName}>\nType<{typeName}>\nat {path}");
@@ -95,13 +95,13 @@ public class Texture2DInfo : IDisposable
         if (Type != TextureType.AmbientOcclusion)
             if (!mat.name.ToLower().Contains(MaterialName))
             {
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if true || UNITY_EDITOR
                 //Debug.LogError($"Refused texture {ToString()} on material <{mat.name.ToLower()}>");
 #endif
                 return false;
             }
 
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+#if true || UNITY_EDITOR
         //Debug.LogWarning($"Connected texture {ToString()} on material <{mat.name.ToLower()}>");
 #endif
 
@@ -127,7 +127,10 @@ public class Texture2DInfo : IDisposable
         return true;
     }
 
-    public override string ToString() => $"MaterialName: <{MaterialName}> Type: {Type}";
+    public override string ToString()
+    {
+        return $"MaterialName: <{MaterialName}> Type: {Type}";
+    }
 
     public static Texture2D LoadTextureData(string filePath)
     {
@@ -138,8 +141,9 @@ public class Texture2DInfo : IDisposable
         {
             fileData = File.ReadAllBytes(filePath);
             tex = new Texture2D(2, 2);
-#if DEVELOPMENT_BUILD || UNITY_EDITOR
+
             if (!tex.LoadImage(fileData)) //..this will auto-resize the texture dimensions.
+#if true || UNITY_EDITOR
             {
                 Debug.LogError($"Failed to load texture from path: {filePath} - invalid format");
             }
@@ -181,5 +185,8 @@ public class Texture2DInfo : IDisposable
     }
 
 
-    public void Dispose() => UnityEngine.Object.Destroy(Texture);
+    public void Dispose()
+    {
+        UnityEngine.Object.Destroy(Texture);
+    }
 }
