@@ -1,3 +1,4 @@
+
 using Lean.Touch;
 using System;
 using System.Collections;
@@ -5,8 +6,10 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.EnhancedTouch;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
+using Touch = UnityEngine.Touch;
 
 [RequireComponent(typeof(ARRaycastManager))]
 [RequireComponent(typeof(ARPlaneManager))]
@@ -146,9 +149,9 @@ public class ARObjectPlacer : MonoBehaviour
         }
         else
         {
-            if (LeanTouch.Fingers.Count == 2 || Input.touchCount == 2)
+            if (Input.touchCount == 2)
                 RotateObject();
-            else if ((LeanTouch.Fingers.Count == 1 || Input.touchCount == 1) && !isRotating)
+            else if (Input.touchCount == 1 && !isRotating)
                 MoveObject();
         }
     }
@@ -187,12 +190,12 @@ public class ARObjectPlacer : MonoBehaviour
     }
     private void MoveObject()
     {
-        if (LeanTouch.Fingers[0].Down || Input.GetTouch(0).phase == TouchPhase.Began)
+        if (Input.GetTouch(0).phase == TouchPhase.Began)
         {
             OnMoveStart?.Invoke();
         }
         //uncheck touchLock
-        if (LeanTouch.Fingers[0].Up || Input.GetTouch(0).phase == TouchPhase.Ended)
+        if (Input.GetTouch(0).phase == TouchPhase.Ended)
         {
             //if (touchLock)
             OnMoveEnd?.Invoke();
@@ -224,8 +227,8 @@ public class ARObjectPlacer : MonoBehaviour
         selectedObject.transform.position = s_Hits[0].pose.position;
         */
 
-        Vector3 worldDelta = LeanTouch.Fingers[0].GetWorldDelta(Vector3.Distance(placedTransform.position, cam.transform.position), Camera.main);
-        worldDelta = transform.TransformDirection(worldDelta);
+        //Vector3 worldDelta = LeanTouch.Fingers[0].GetWorldDelta(Vector3.Distance(placedTransform.position, cam.transform.position), Camera.main);
+        //worldDelta = transform.TransformDirection(worldDelta);
 
 
         Vector3 screenPos = Input.GetTouch(0).position;
@@ -234,7 +237,7 @@ public class ARObjectPlacer : MonoBehaviour
         float distance = Vector3.Distance(placedTransform.position, cam.transform.position);
         Vector3 worldPos1 = cam.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, distance));
         Vector3 worldPos2 = cam.ScreenToWorldPoint(new Vector3(screenPos.x - screenDelta.x, screenPos.y - screenDelta.y, distance));
-        worldDelta = worldPos1 - worldPos2;
+        Vector3 worldDelta = worldPos1 - worldPos2;
         worldDelta = transform.TransformDirection(worldDelta);
 
         Vector3 projectedCameraForward = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up);
@@ -265,13 +268,25 @@ public class ARObjectPlacer : MonoBehaviour
 
 
     }
+
+
     private void RotateObject()
     {
         //get finger and angle
         //List<Lean.Touch.LeanFinger> finger = Lean.Touch.LeanTouch.Fingers;
-        float twistDegrees = LeanGesture.GetTwistDegrees();
-        //Touch touch1 = Input.touches[0];
-        //Touch touch2 = Input.touches[1];
+
+        Touch touch0 = Input.touches[0];
+        Touch touch1 = Input.touches[1];
+
+        var pos1 = touch0.position;
+        var pos2 = touch1.position;
+        var pos1b = touch0.position - touch0.deltaPosition;
+        var pos2b = touch1.position - touch1.deltaPosition;
+
+        var screenCenter = new Vector3(Screen.width / 2, Screen.height / 2, 0);
+
+        float twistDegrees = Vector3.SignedAngle(pos2b - pos1b, pos2 - pos1, Vector3.forward);
+        //Debug.Log(twistDegrees);
 
         //rotate object
         placedTransform.Rotate(modelRotationAxis, twistDegrees);
@@ -293,11 +308,6 @@ public class ARObjectPlacer : MonoBehaviour
 
     private bool TryGetTouchPosition(out Vector2 touchPosition)
     {
-        if (LeanTouch.Fingers.Count > 0)
-        {
-            touchPosition = LeanTouch.Fingers[0].ScreenPosition;
-            return true;
-        }
 
         if (Input.touchCount > 0)
         {

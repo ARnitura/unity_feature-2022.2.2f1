@@ -243,7 +243,7 @@ public class ARObject : MonoBehaviour
         //apply bounds to box collider
         modelCollider.center = resultingBounds.center;
         modelCollider.size = resultingBounds.size;
-
+        /*
 #if true || UNITY_EDITOR
         Transform debugCollider = Instantiate(colliderDebugPrefab, transform.position, transform.rotation);
         debugCollider.SetParent(transform);
@@ -255,6 +255,7 @@ public class ARObject : MonoBehaviour
         debugAxis.SetParent(transform);
         debugAxis.forward = Model.forward;
 #endif
+        */
     }
 
 }
