@@ -10,16 +10,13 @@ using BuildResult = UnityEditor.Build.Reporting.BuildResult;
 
 public class Build : EditorWindow
 {
-    static readonly string ProjectPath = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
-
-    static readonly string apkPath = Path.Combine(ProjectPath, "Builds/" + Application.productName + ".apk");
-
-    static readonly string androidExportPath = Path.GetFullPath(Path.Combine(ProjectPath, "../../android/unityLibrary"));
-    static readonly string iosExportPath = Path.GetFullPath(Path.Combine(ProjectPath, "../../ios/UnityLibrary"));
-    static readonly string iosExportPluginPath = Path.GetFullPath(Path.Combine(ProjectPath, "../../ios_xcode/UnityLibrary"));
-
-    bool pluginMode = false;
-    static string persistentKey = "flutter-unity-widget-pluginMode";
+    private static readonly string ProjectPath = Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
+    private static readonly string apkPath = Path.Combine(ProjectPath, "Builds/" + Application.productName + ".apk");
+    private static readonly string androidExportPath = Path.GetFullPath(Path.Combine(ProjectPath, "../../android/unityLibrary"));
+    private static readonly string iosExportPath = Path.GetFullPath(Path.Combine(ProjectPath, "../../ios/UnityLibrary"));
+    private static readonly string iosExportPluginPath = Path.GetFullPath(Path.Combine(ProjectPath, "../../ios_xcode/UnityLibrary"));
+    private bool pluginMode = false;
+    private static string persistentKey = "flutter-unity-widget-pluginMode";
 
     [MenuItem("Flutter/Export Android %&n", false, 1)]
     public static void DoBuildAndroidLibrary()
@@ -48,7 +45,7 @@ public class Build : EditorWindow
         Copy(Path.Combine(apkPath + "/launcher/src/main/res"), Path.Combine(androidExportPath, "src/main/res"));
     }
 
-    public static void DoBuildAndroid(String buildPath, bool isPlugin)
+    public static void DoBuildAndroid(string buildPath, bool isPlugin)
     {
         if (Directory.Exists(apkPath))
             Directory.Delete(apkPath, true);
@@ -59,12 +56,12 @@ public class Build : EditorWindow
         EditorUserBuildSettings.androidBuildSystem = AndroidBuildSystem.Gradle;
 
 
-        var options = BuildOptions.None;
+        var options = BuildOptions.CompressWithLz4HC;
         EditorUserBuildSettings.exportAsGoogleAndroidProject = true;
 
-       // PlayerSettings.SetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.Android, "RELEASE");
-       // EditorUtility.RequestScriptReload();
-       // UnityEditor.Compilation.CompilationPipeline.RequestScriptCompilation();
+        // PlayerSettings.SetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.Android, "RELEASE");
+        // EditorUtility.RequestScriptReload();
+        // UnityEditor.Compilation.CompilationPipeline.RequestScriptCompilation();
 
         var report = BuildPipeline.BuildPlayer(
             GetEnabledScenes(),
@@ -97,16 +94,17 @@ public class Build : EditorWindow
         manifest_text = regex.Replace(manifest_text, "");
         File.WriteAllText(manifest_file, manifest_text);
 
-        if(isPlugin)
+        if (isPlugin)
         {
             SetupAndroidProjectForPlugin();
-        } else
+        }
+        else
         {
             SetupAndroidProject();
         }
     }
 
-    public static void DoBuildAndroidDebug(String buildPath, bool isPlugin)
+    public static void DoBuildAndroidDebug(string buildPath, bool isPlugin)
     {
         if (Directory.Exists(apkPath))
             Directory.Delete(apkPath, true);
@@ -120,10 +118,10 @@ public class Build : EditorWindow
         var options = BuildOptions.Development | BuildOptions.CompressWithLz4 | BuildOptions.AllowDebugging;
         EditorUserBuildSettings.exportAsGoogleAndroidProject = true;
 
-        
+
         //PlayerSettings.SetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.Android, "DEBUG");
         //EditorUtility.RequestScriptReload();
-       // UnityEditor.Compilation.CompilationPipeline.RequestScriptCompilation();
+        // UnityEditor.Compilation.CompilationPipeline.RequestScriptCompilation();
 
         var report = BuildPipeline.BuildPlayer(
             GetEnabledScenes(),
@@ -198,7 +196,7 @@ public class Build : EditorWindow
         EditorWindow.GetWindow(typeof(Build));
     }
 
-    void OnGUI()
+    private void OnGUI()
     {
         GUILayout.Label("Flutter Unity Widget Settings", EditorStyles.boldLabel);
 
@@ -213,10 +211,10 @@ public class Build : EditorWindow
 
     private void OnEnable()
     {
-      pluginMode = EditorPrefs.GetBool(persistentKey, false);
+        pluginMode = EditorPrefs.GetBool(persistentKey, false);
     }
 
-    private static void BuildIOS(String path)
+    private static void BuildIOS(string path)
     {
         if (Directory.Exists(path))
             Directory.Delete(path, true);
@@ -224,7 +222,7 @@ public class Build : EditorWindow
         EditorUserBuildSettings.iOSXcodeBuildConfig = XcodeBuildConfig.Release;
 
 
-        var options = BuildOptions.None;
+        var options = BuildOptions.CompressWithLz4HC;
 
         var report = BuildPipeline.BuildPlayer(
             GetEnabledScenes(),
@@ -236,7 +234,7 @@ public class Build : EditorWindow
         if (report.summary.result != BuildResult.Succeeded)
             throw new Exception("Build failed");
     }
-    private static void BuildIOSDebug(String path)
+    private static void BuildIOSDebug(string path)
     {
         if (Directory.Exists(path))
             Directory.Delete(path, true);
@@ -257,7 +255,7 @@ public class Build : EditorWindow
             throw new Exception("Build failed");
     }
 
-    static void Copy(string source, string destinationPath)
+    private static void Copy(string source, string destinationPath)
     {
         if (Directory.Exists(destinationPath))
             Directory.Delete(destinationPath, true);
@@ -273,7 +271,7 @@ public class Build : EditorWindow
             File.Copy(newPath, newPath.Replace(source, destinationPath), true);
     }
 
-    static string[] GetEnabledScenes()
+    private static string[] GetEnabledScenes()
     {
         var scenes = EditorBuildSettings.scenes
             .Where(s => s.enabled)
@@ -286,7 +284,7 @@ public class Build : EditorWindow
     /// <summary>
     /// This method tries to autome the build setup required for Android
     /// </summary>
-    static void SetupAndroidProject()
+    private static void SetupAndroidProject()
     {
         string androidPath = Path.GetFullPath(Path.Combine(ProjectPath, "../../android"));
         string androidAppPath = Path.GetFullPath(Path.Combine(ProjectPath, "../../android/app"));
@@ -333,7 +331,8 @@ dependencies {
 }
 ";
             File.WriteAllText(app_build_path, app_build_script);
-        } else
+        }
+        else
         {
             if (!app_build_script.Contains(@"implementation project(':unityLibrary')"))
             {
@@ -350,7 +349,7 @@ dependencies {
     /// <summary>
     /// This method tries to autome the build setup required for Android
     /// </summary>
-    static void SetupAndroidProjectForPlugin()
+    private static void SetupAndroidProjectForPlugin()
     {
         string androidPath = Path.GetFullPath(Path.Combine(ProjectPath, "../../android"));
         var proj_build_path = Path.Combine(androidPath, "build.gradle");
@@ -383,7 +382,7 @@ project("":unityLibrary"").projectDir = file(""./unityLibrary"")
         }
     }
 
-    static void SetupIOSProjectForPlugin()
+    private static void SetupIOSProjectForPlugin()
     {
         string iosRunnerPath = Path.GetFullPath(Path.Combine(ProjectPath, "../../ios"));
         var pubsec_file = Path.Combine(iosRunnerPath, "flutter_unity_widget.podspec");
@@ -405,12 +404,13 @@ project("":unityLibrary"").projectDir = file(""./unityLibrary"")
     }
 
     // DO NOT USE (Contact before trying)
-    static async void BuildUnityFrameworkArchive()
+    private static async void BuildUnityFrameworkArchive()
     {
         string XCPROJECT_EXT = "/Unity-iPhone.xcodeproj";
 
         // check if we have a workspace or not
-        if (Directory.Exists(iosExportPluginPath + "/Unity-iPhone.xcworkspace")) {
+        if (Directory.Exists(iosExportPluginPath + "/Unity-iPhone.xcworkspace"))
+        {
             XCPROJECT_EXT = "/Unity-iPhone.xcworkspace";
         }
 
