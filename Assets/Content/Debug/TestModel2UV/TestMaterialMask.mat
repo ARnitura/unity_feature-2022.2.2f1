@@ -8,7 +8,7 @@ Material:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: TestMaterialMask
-  m_Shader: {fileID: -6465566751694194690, guid: 7ec40da280292104f94761496aec366b, type: 3}
+  m_Shader: {fileID: 4800000, guid: f38877f690ec5074a814817a216a3829, type: 3}
   m_ShaderKeywords: 
   m_LightmapFlags: 4
   m_EnableInstancingVariants: 0
@@ -20,7 +20,7 @@ Material:
     serializedVersion: 3
     m_TexEnvs:
     - _BumpMap:
-        m_Texture: {fileID: 2800000, guid: 32e247bc50751ea41a48584f36e5d20f, type: 3}
+        m_Texture: {fileID: 0}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _MainTex:
@@ -39,6 +39,8 @@ Material:
     m_Floats:
     - _BUILTIN_QueueControl: 0
     - _BUILTIN_QueueOffset: 0
+    - _OcclusionIntencity: 1
+    - _OcclusionIntensity: 1
     m_Colors: []
   m_BuildTextureStacks: []
 --- !u!114 &6654691775063246764

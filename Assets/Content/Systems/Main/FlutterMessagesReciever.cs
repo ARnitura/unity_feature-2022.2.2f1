@@ -24,11 +24,6 @@ public class FlutterMessagesReciever : MonoBehaviour
     [SerializeField]
     private ARObjectLoader objectLoader;
 
-#if true || UNITY_EDITOR
-    [SerializeField]
-    [Header("Debug")]
-    private TextMeshProUGUI debugText;
-#endif
 
     private void Start()
     {
@@ -87,15 +82,6 @@ public class FlutterMessagesReciever : MonoBehaviour
 
 
 
-
-    private void Update()
-    {
-#if true || UNITY_EDITOR
-        string planeDetectionColor = aRPlaneManager.enabled ? ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
-        debugText.text = $"AR Plane Detection: <color=#{planeDetectionColor}>{aRPlaneManager.enabled}</color>\n" +
-                         $"AR Plane trackables: {aRPlaneManager.trackables.count}";
-#endif
-    }
 
 
     public void LoadModel(string filePath)

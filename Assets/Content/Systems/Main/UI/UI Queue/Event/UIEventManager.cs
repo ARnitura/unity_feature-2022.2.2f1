@@ -5,6 +5,8 @@ using UnityEngine;
 public class UIEventManager : MonoBehaviour
 {
     [SerializeField]
+    private bool active;
+    [SerializeField]
     private Transform queueV, queueA;
     private static UIEventManager instance;
 
@@ -103,10 +105,9 @@ public class UIEventManager : MonoBehaviour
     }
     private static void LogInternal(string condition, string stackTrace, float duration, Color color)
     {
+        if (!instance.active)
+            return;
+
         AddEvent($"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{condition}</color>\n{stackTrace}", duration, 35);
-    }
-    public static void LogException(Exception e, float duration)
-    {
-        AddEvent($"<color=red>{e.GetType().Name}</color>\n{e.StackTrace}\n{e.Data}", duration, 35);
     }
 }

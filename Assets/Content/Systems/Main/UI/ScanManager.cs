@@ -26,7 +26,7 @@ public class ScanManager : MonoBehaviour
     [SerializeField]
     private Button scanEndButton;
 
-#if UNITY_EDITOR || true
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
     [SerializeField]
     private TextMeshProUGUI debugText;
 #endif
@@ -217,6 +217,10 @@ public class ScanManager : MonoBehaviour
 
     private async UniTask UpdateSlider()
     {
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+        debugText.text = $"Planes: {currentPlanesCount}/{targetPlanesCount}\n" +
+                 $"Updates: {currentUpdatesCount}/{targetUpdatesCount}";
+#endif
         float t = 0;
         float duration = 0.2f;
         float startValue = scanSlider.value;
@@ -229,7 +233,7 @@ public class ScanManager : MonoBehaviour
     }
 
 
-#if true || UNITY_EDITOR
+#if  UNITY_EDITOR
     private void Update()
     {
 
@@ -242,8 +246,7 @@ public class ScanManager : MonoBehaviour
             EndScan().Forget();
         }
 
-        debugText.text = $"Planes: {currentPlanesCount}/{targetPlanesCount}\n" +
-                         $"Updates: {currentUpdatesCount}/{targetUpdatesCount}";
+
 
     }
 

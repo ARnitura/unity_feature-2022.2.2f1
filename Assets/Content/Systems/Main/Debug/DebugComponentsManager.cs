@@ -18,5 +18,17 @@ public class DebugComponentsManager : MonoBehaviour
             Destroy(debugObjects[i]);
         }
 #endif
+
+#if UNITY_EDITOR
+        for (int i = 0; i < debugComponents.Length; i++)
+        {
+            debugComponents[i].enabled = true;
+
+        }
+        for (int i = 0; i < debugObjects.Length; i++)
+        {
+            debugObjects[i].SetActive(true);
+        }
+#endif
     }
 }

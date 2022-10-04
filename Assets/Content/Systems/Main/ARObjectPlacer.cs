@@ -15,6 +15,8 @@ using Touch = UnityEngine.Touch;
 [RequireComponent(typeof(ARPlaneManager))]
 public class ARObjectPlacer : MonoBehaviour
 {
+    [SerializeField]
+    private bool showDebugInfo = false;
     //marker
     [SerializeField] private GameObject planeMarker;
     private Camera cam;
@@ -75,38 +77,40 @@ public class ARObjectPlacer : MonoBehaviour
     private void Update()
     {
 
-#if true || UNITY_EDITOR
-        if (Input.GetKeyDown(KeyCode.A))
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
+        if (showDebugInfo)
         {
-            PlaceObject(new Vector3(2, 0, 2), Quaternion.identity);
-        }
+            if (Input.GetKeyDown(KeyCode.A))
+            {
+                PlaceObject(new Vector3(2, 0, 2), Quaternion.identity);
+            }
 
-        string spawnedObjectColor = objectLoader.ARObject != null ? ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
-        string touchColor = ColorUtility.ToHtmlStringRGB(Color.green);
-        string touchAppliedColor = TryGetTouchPosition(out Vector2 touchPosition1) ? ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
-        bool touchUIBlock = false;
+            string spawnedObjectColor = objectLoader.ARObject != null ? ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
+            string touchColor = ColorUtility.ToHtmlStringRGB(Color.green);
+            string touchAppliedColor = TryGetTouchPosition(out Vector2 touchPosition1) ? ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
+            bool touchUIBlock = false;
 
-        foreach (Touch touch in Input.touches)
-            if (EventSystem.current.IsPointerOverGameObject(touch.fingerId))
+            foreach (Touch touch in Input.touches)
+                if (EventSystem.current.IsPointerOverGameObject(touch.fingerId))
+                {
+                    touchColor = ColorUtility.ToHtmlStringRGB(Color.red);
+                    touchUIBlock = true;
+                    break;
+                }
+            if (UIUtils.IsPointerOverUIObject())
             {
                 touchColor = ColorUtility.ToHtmlStringRGB(Color.red);
                 touchUIBlock = true;
-                break;
             }
-        if (UIUtils.IsPointerOverUIObject())
-        {
-            touchColor = ColorUtility.ToHtmlStringRGB(Color.red);
-            touchUIBlock = true;
+            bool verdict = !touchUIBlock && objectLoader.ARObject != null && TryGetTouchPosition(out touchPosition1);
+            string verdictColor = verdict ? ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
+
+            debugText.text = $"Touch conditions:\n" +
+                $"Model loaded? <color=#{spawnedObjectColor}>{objectLoader.ARObject != null}</color>\n" +
+                $"Pointer(s) is over UI? <color=#{touchColor}>{touchUIBlock}</color>\n" +
+                $"At least one touch? <color=#{touchAppliedColor}>{TryGetTouchPosition(out touchPosition1)}</color>\n" +
+                $"Can place 3d model? <color=#{verdictColor}>{verdict}</color>";
         }
-        bool verdict = !touchUIBlock && objectLoader.ARObject != null && TryGetTouchPosition(out touchPosition1);
-        string verdictColor = verdict ? ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
-
-        debugText.text = $"Touch conditions:\n" +
-            $"Model loaded? <color=#{spawnedObjectColor}>{objectLoader.ARObject != null}</color>\n" +
-            $"Pointer(s) is over UI? <color=#{touchColor}>{touchUIBlock}</color>\n" +
-            $"At least one touch? <color=#{touchAppliedColor}>{TryGetTouchPosition(out touchPosition1)}</color>\n" +
-            $"Can place 3d model? <color=#{verdictColor}>{verdict}</color>";
-
 #endif
 
         if (!scanManager.ScanComplete)
@@ -153,6 +157,13 @@ public class ARObjectPlacer : MonoBehaviour
                 RotateObject();
             else if (Input.touchCount == 1 && !isRotating)
                 MoveObject();
+
+#if UNITY_EDITOR
+            if (LeanTouch.Fingers.Count == 2)
+                RotateObject();
+            else if (LeanTouch.Fingers.Count == 1 && !isRotating)
+                MoveObject();
+#endif
         }
     }
 
@@ -190,6 +201,8 @@ public class ARObjectPlacer : MonoBehaviour
     }
     private void MoveObject()
     {
+        //if (Input.touchCount > 0)
+        //{
         if (Input.GetTouch(0).phase == TouchPhase.Began)
         {
             OnMoveStart?.Invoke();
@@ -202,6 +215,7 @@ public class ARObjectPlacer : MonoBehaviour
 
             // touchLock = false;
         }
+        // }
         modelTransform.localPosition = Vector3.SmoothDamp(modelTransform.localPosition, Vector3.up * yUpLength, ref currentModelVelocity, 0.05f);
 
         //Debug.Log($"delta is {LeanTouch.Fingers[0].ScaledDelta}");
@@ -227,8 +241,14 @@ public class ARObjectPlacer : MonoBehaviour
         selectedObject.transform.position = s_Hits[0].pose.position;
         */
 
-        //Vector3 worldDelta = LeanTouch.Fingers[0].GetWorldDelta(Vector3.Distance(placedTransform.position, cam.transform.position), Camera.main);
-        //worldDelta = transform.TransformDirection(worldDelta);
+        //Vector3 worldDelta = LeanTouch.Fingers[0].GetWorldDelta(Vector3.Distance(placedTransform.position, cam.transform.position), cam);
+
+        // Vector3 horizontalComponent = cam.transform.forward;
+        //horizontalComponent.y = 0;
+
+
+        //worldDelta = Vector3.ProjectOnPlane(worldDelta, horizontalComponent);
+        //worldDelta = transform.InverseTransformDirection(worldDelta);
 
 
         Vector3 screenPos = Input.GetTouch(0).position;
@@ -238,10 +258,17 @@ public class ARObjectPlacer : MonoBehaviour
         Vector3 worldPos1 = cam.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, distance));
         Vector3 worldPos2 = cam.ScreenToWorldPoint(new Vector3(screenPos.x - screenDelta.x, screenPos.y - screenDelta.y, distance));
         Vector3 worldDelta = worldPos1 - worldPos2;
-        worldDelta = transform.TransformDirection(worldDelta);
+        worldDelta = transform.InverseTransformDirection(worldDelta);
+
 
         Vector3 projectedCameraForward = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up);
-        Vector3 rightDirection = -Vector3.Cross(projectedCameraForward, Vector3.up);
+        Vector3 rightDirection = Vector3.ProjectOnPlane(cam.transform.right, Vector3.up);
+
+        //Debug.DrawRay(placedTransform.position, rightDirection, Color.red);
+        //Debug.DrawRay(placedTransform.position, projectedCameraForward, Color.blue);
+
+
+
         //placedTransform.position += projectedCameraForward * deltaMove.y * 0.001f + rightDirection * deltaMove.x * 0.001f;
         Vector3 desiredPosition = placedTransform.position + rightDirection * worldDelta.x + projectedCameraForward * worldDelta.y;// projectedCameraForward * touch.deltaPosition.y * 0.005f + rightDirection * touch.deltaPosition.x * 0.005f;
         Vector3 clampedPosition = Vector3.ClampMagnitude(desiredPosition, 15);
@@ -314,13 +341,13 @@ public class ARObjectPlacer : MonoBehaviour
             touchPosition = Input.GetTouch(0).position;
             return true;
         }
-        /*
+#if UNITY_EDITOR
         else if (Input.GetKey(KeyCode.Mouse0))
         {
             touchPosition = Input.mousePosition;
             return true;
         }
-        */
+#endif
         if (isRotating)
             OnRotationEnd?.Invoke();
 
