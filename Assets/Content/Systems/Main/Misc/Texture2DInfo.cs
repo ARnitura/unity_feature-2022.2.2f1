@@ -122,7 +122,14 @@ public class Texture2DInfo : IDisposable
 
     private bool ApplyToMaterial(Material mat, string texName)
     {
-        mat.SetTexture(texName, Texture);
+        if (mat.HasProperty(texName))
+            mat.SetTexture(texName, Texture);
+        else
+        {
+            Debug.LogError($"Failed to apply texture: MaterialName: <{MaterialName}> Type: {Type} - shader property {texName} doesn't exist");
+            return false;
+        }
+
         WasApplied = true;
         return true;
     }
