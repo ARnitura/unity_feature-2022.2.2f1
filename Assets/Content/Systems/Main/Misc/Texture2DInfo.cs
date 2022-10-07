@@ -177,6 +177,8 @@ public class Texture2DInfo : IDisposable
         Graphics.CopyTexture(loadedNormalMap, convertedNormalMap);
         convertedNormalMap.Apply();
 
+        UnityEngine.Object.Destroy(loadedNormalMap);
+
         return convertedNormalMap;
     }
 

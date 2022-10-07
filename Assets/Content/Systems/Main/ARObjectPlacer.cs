@@ -203,6 +203,7 @@ public class ARObjectPlacer : MonoBehaviour
     {
         //if (Input.touchCount > 0)
         //{
+#if !UNITY_EDITOR
         if (Input.GetTouch(0).phase == TouchPhase.Began)
         {
             OnMoveStart?.Invoke();
@@ -215,6 +216,20 @@ public class ARObjectPlacer : MonoBehaviour
 
             // touchLock = false;
         }
+#else
+        if (LeanTouch.Fingers[0].Down)
+        {
+            OnMoveStart?.Invoke();
+        }
+        //uncheck touchLock
+        if (LeanTouch.Fingers[0].Up)
+        {
+            //if (touchLock)
+            OnMoveEnd?.Invoke();
+
+            // touchLock = false;
+        }
+#endif
         // }
         modelTransform.localPosition = Vector3.SmoothDamp(modelTransform.localPosition, Vector3.up * yUpLength, ref currentModelVelocity, 0.05f);
 
@@ -250,7 +265,7 @@ public class ARObjectPlacer : MonoBehaviour
         //worldDelta = Vector3.ProjectOnPlane(worldDelta, horizontalComponent);
         //worldDelta = transform.InverseTransformDirection(worldDelta);
 
-
+#if !UNITY_EDITOR
         Vector3 screenPos = Input.GetTouch(0).position;
         Vector3 screenDelta = Input.GetTouch(0).deltaPosition;
 
@@ -258,9 +273,11 @@ public class ARObjectPlacer : MonoBehaviour
         Vector3 worldPos1 = cam.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, distance));
         Vector3 worldPos2 = cam.ScreenToWorldPoint(new Vector3(screenPos.x - screenDelta.x, screenPos.y - screenDelta.y, distance));
         Vector3 worldDelta = worldPos1 - worldPos2;
+#else
+        Vector3 worldDelta = LeanTouch.Fingers[0].GetWorldDelta(Vector3.Distance(placedTransform.position, cam.transform.position), cam);
+#endif
+
         worldDelta = transform.InverseTransformDirection(worldDelta);
-
-
         Vector3 projectedCameraForward = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up);
         Vector3 rightDirection = Vector3.ProjectOnPlane(cam.transform.right, Vector3.up);
 
@@ -301,7 +318,7 @@ public class ARObjectPlacer : MonoBehaviour
     {
         //get finger and angle
         //List<Lean.Touch.LeanFinger> finger = Lean.Touch.LeanTouch.Fingers;
-
+#if !UNITY_EDITOR
         Touch touch0 = Input.touches[0];
         Touch touch1 = Input.touches[1];
 
@@ -314,7 +331,9 @@ public class ARObjectPlacer : MonoBehaviour
 
         float twistDegrees = Vector3.SignedAngle(pos2b - pos1b, pos2 - pos1, Vector3.forward);
         //Debug.Log(twistDegrees);
-
+#else
+        float twistDegrees = LeanGesture.GetTwistDegrees();
+#endif
         //rotate object
         placedTransform.Rotate(modelRotationAxis, twistDegrees);
         placedTransform.Rotate(modelRotationAxis, twistDegrees);

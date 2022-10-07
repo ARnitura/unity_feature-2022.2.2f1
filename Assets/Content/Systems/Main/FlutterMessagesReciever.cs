@@ -28,7 +28,7 @@ public class FlutterMessagesReciever : MonoBehaviour
     private void Start()
     {
         ClearAR();
-        Application.targetFrameRate = 60;//StartAR();
+        //Application.targetFrameRate = 60;//StartAR();
     }
 
     public void StartAR()
