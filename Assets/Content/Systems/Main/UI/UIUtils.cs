@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using Lean.Touch;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
@@ -9,8 +10,32 @@ public static class UIUtils
 
     public static bool IsPointerOverUIObject()
     {
+        PointerEventData eventDataCurrentPosition = new PointerEventData(EventSystem.current)
+        {
+            position = new Vector2(Input.mousePosition.x, Input.mousePosition.y)
+        };
+        List<RaycastResult> results = new List<RaycastResult>();
+        EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
+        return results.Count > 0;
+    }
+
+    public static bool IsTouchOverUIObject()
+    {
+
+#if UNITY_EDITOR
+        if (LeanTouch.Fingers.Count == 0)
+            return false;
+#else
+        if(Input.touchCount == 0)
+            return false;
+#endif
         PointerEventData eventDataCurrentPosition = new PointerEventData(EventSystem.current);
-        eventDataCurrentPosition.position = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+        //eventDataCurrentPosition.position = new Vector2(Input.mousePosition.x, Input.mousePosition.y);
+#if UNITY_EDITOR
+        eventDataCurrentPosition.position = new Vector2(LeanTouch.Fingers[0].ScreenPosition.x, LeanTouch.Fingers[0].ScreenPosition.y);
+#else
+        eventDataCurrentPosition.position = new Vector2(Input.GetTouch(0).position.x, Input.GetTouch(0).position.y);
+#endif
         List<RaycastResult> results = new List<RaycastResult>();
         EventSystem.current.RaycastAll(eventDataCurrentPosition, results);
         return results.Count > 0;

@@ -90,6 +90,7 @@ public class ARObjectPlacer : MonoBehaviour
             string touchAppliedColor = TryGetTouchPosition(out Vector2 touchPosition1) ? ColorUtility.ToHtmlStringRGB(Color.green) : ColorUtility.ToHtmlStringRGB(Color.red);
             bool touchUIBlock = false;
 
+            /*
             foreach (Touch touch in Input.touches)
                 if (EventSystem.current.IsPointerOverGameObject(touch.fingerId))
                 {
@@ -97,7 +98,8 @@ public class ARObjectPlacer : MonoBehaviour
                     touchUIBlock = true;
                     break;
                 }
-            if (UIUtils.IsPointerOverUIObject())
+            */
+            if (UIUtils.IsTouchOverUIObject())
             {
                 touchColor = ColorUtility.ToHtmlStringRGB(Color.red);
                 touchUIBlock = true;
@@ -120,10 +122,8 @@ public class ARObjectPlacer : MonoBehaviour
         if (Object == null)
             return;
 
-
-        foreach (Touch touch in Input.touches)
-            if (EventSystem.current.IsPointerOverGameObject(touch.fingerId))
-                return;
+        if (UIUtils.IsTouchOverUIObject())
+            return;
 
 
         if (!TryGetTouchPosition(out Vector2 touchPosition))
@@ -201,33 +201,28 @@ public class ARObjectPlacer : MonoBehaviour
     }
     private void MoveObject()
     {
-        //if (Input.touchCount > 0)
-        //{
 #if !UNITY_EDITOR
         if (Input.GetTouch(0).phase == TouchPhase.Began)
         {
             OnMoveStart?.Invoke();
         }
-        //uncheck touchLock
         if (Input.GetTouch(0).phase == TouchPhase.Ended)
         {
-            //if (touchLock)
             OnMoveEnd?.Invoke();
-
-            // touchLock = false;
+            return;
         }
 #else
+
         if (LeanTouch.Fingers[0].Down)
         {
             OnMoveStart?.Invoke();
+            //Debug.Log("starting move action");
         }
-        //uncheck touchLock
         if (LeanTouch.Fingers[0].Up)
         {
-            //if (touchLock)
             OnMoveEnd?.Invoke();
-
-            // touchLock = false;
+            //Debug.Log("Ending move action");
+            return;
         }
 #endif
         // }
@@ -361,9 +356,9 @@ public class ARObjectPlacer : MonoBehaviour
             return true;
         }
 #if UNITY_EDITOR
-        else if (Input.GetKey(KeyCode.Mouse0))
+        else if (LeanTouch.Fingers.Count > 0)
         {
-            touchPosition = Input.mousePosition;
+            touchPosition = LeanTouch.Fingers[0].ScreenPosition;
             return true;
         }
 #endif
@@ -371,9 +366,6 @@ public class ARObjectPlacer : MonoBehaviour
             OnRotationEnd?.Invoke();
 
         isRotating = false;
-
-
-
         touchPosition = default;
         return false;
     }
