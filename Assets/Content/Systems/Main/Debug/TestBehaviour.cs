@@ -1,17 +1,28 @@
+using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.Networking;
+using static UnityEditor.Progress;
 
 public class TestBehaviour : MonoBehaviour
 {
     [SerializeField]
     private FlutterMessagesReciever messages;
+    [SerializeField]
+    private ARObjectLoader loader;
     private string testFolderDir;
+    private string autoTestFolder;
+    private int currentFolderIndex = 0;
+    private int maxTestCount = 0;
+    private int texFolderIndex = 0;
+
 #if true || UNITY_EDITOR
     private void Start()
     {
         testFolderDir = Path.Combine(Directory.GetParent(Application.dataPath).FullName, @"testFolder\");//Debug.Log(Application.dataPath);//Debug.Log(Directory.GetParent(Application.dataPath).FullName);//Debug.Log(testFolderDir);
+        autoTestFolder = Path.Combine(Directory.GetParent(Application.dataPath).FullName, @"autoTestFolder\");//Debug.Log(Application.dataPath);//Debug.Log(Directory.GetParent(Application.dataPath).FullName);//Debug.Log(testFolderDir);
     }
 
     private void Update()
@@ -67,9 +78,112 @@ public class TestBehaviour : MonoBehaviour
             messages.StartAR();
 
         }
+
+        if (Input.GetKeyDown(KeyCode.T))
+        {
+            messages.ClearAR();
+            messages.StartAR();
+            string[] folders = Directory.GetDirectories(autoTestFolder);
+            string texturesFolder = string.Empty;
+
+            for (int i = 0; i < folders.Length; i++)
+            {
+                //Debug.Log(Path.GetFileName(folders[i]));
+                if (Path.GetFileName(folders[i]).ToLower() == "textures")
+                {
+                    texturesFolder = folders[i];
+                    maxTestCount = folders.Length - 1;
+                    texFolderIndex = i;
+                    break;
+                }
+            }
+
+            if (texturesFolder == string.Empty)
+                throw new IOException("No textures folder in autotest folder");
+
+
+            if (currentFolderIndex == texFolderIndex)
+                currentFolderIndex++;
+
+            List<string> texturePaths = new List<string>();
+
+            //get next model test folder
+            string currentModelFolder = folders[currentFolderIndex];
+
+            string[] files = Directory.GetFiles(currentModelFolder);
+            //load model
+            foreach (var item in files)
+            {
+                if (item.Contains(".fbx"))
+                {
+                    messages.LoadModel(item);
+                }
+                else if (item.Contains(".png") || item.Contains(".jpg"))
+                {
+                    texturePaths.Add(item);
+                }
+                else
+                {
+                    Debug.LogError($"Unknown file at {item}");
+                }
+            }
+
+            foreach (var item in GetFiles(folders[texFolderIndex]))
+            {
+                if (item.Contains(".png") || item.Contains(".jpg"))
+                {
+                    texturePaths.Add(item);
+                }
+                else
+                {
+                    Debug.LogError($"Unknown file at {item}");
+                }
+            }
+
+            //we can't deside at this moment which textures are correct, so my load mechanism will deside it
+            loader.onModelLoaded = null;
+            loader.onModelLoaded += () => { loader.LoadTextures(texturePaths); loader.ARObject.gameObject.SetActive(true); };
+
+            currentFolderIndex++;
+        }
     }
 
-
+    private static IEnumerable<string> GetFiles(string path)
+    {
+        Queue<string> queue = new Queue<string>();
+        queue.Enqueue(path);
+        while (queue.Count > 0)
+        {
+            path = queue.Dequeue();
+            try
+            {
+                foreach (string subDir in Directory.GetDirectories(path))
+                {
+                    queue.Enqueue(subDir);
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError(ex);
+            }
+            string[] files = null;
+            try
+            {
+                files = Directory.GetFiles(path);
+            }
+            catch (Exception ex)
+            {
+                Debug.LogError(ex);
+            }
+            if (files != null)
+            {
+                for (int i = 0; i < files.Length; i++)
+                {
+                    yield return files[i];
+                }
+            }
+        }
+    }
 
 
     public void WebLoadModel()

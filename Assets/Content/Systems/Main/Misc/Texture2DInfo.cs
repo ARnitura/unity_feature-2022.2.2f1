@@ -92,11 +92,18 @@ public class Texture2DInfo : IDisposable
 
     public bool TryApplyToMaterial(Material mat)
     {
+        string trimmedMatName = mat.name.ToLower();
+        if (trimmedMatName.Contains("(instance)"))
+            trimmedMatName = trimmedMatName.Replace("(instance)", "");
+
+        trimmedMatName = trimmedMatName.Trim();
+
+
         if (Type != TextureType.AmbientOcclusion)
-            if (!mat.name.ToLower().Contains(MaterialName))
+            if (!trimmedMatName.Contains(MaterialName) && !MaterialName.Contains(trimmedMatName))
             {
 #if true || UNITY_EDITOR
-                //Debug.LogError($"Refused texture {ToString()} on material <{mat.name.ToLower()}>");
+                Debug.LogError($"Refused texture {ToString()} on material <{trimmedMatName}>");
 #endif
                 return false;
             }
@@ -192,7 +199,15 @@ public class Texture2DInfo : IDisposable
 
         return result;
     }
+    public static List<Texture2DInfo> GetTexturesFromPaths(List<string> paths)
+    {
+        List<Texture2DInfo> result = new List<Texture2DInfo>();
 
+        foreach (string texturePath in paths)
+            result.Add(new Texture2DInfo(texturePath));
+
+        return result;
+    }
 
     public void Dispose()
     {

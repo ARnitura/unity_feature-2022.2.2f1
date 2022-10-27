@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -38,6 +39,9 @@ public class ARObjectLoader : MonoBehaviour
 
     private List<Texture2DInfo> loadedTextures = new List<Texture2DInfo>();
     private bool modelLoaded = false;
+
+    public Action onModelLoaded;
+
 
     //model loading
     public void LoadModel(string filePath)
@@ -95,9 +99,11 @@ public class ARObjectLoader : MonoBehaviour
 #if true || UNITY_EDITOR
         Debug.LogWarning($"Model loaded <{assetLoaderContext.RootGameObject.name}>");
 #endif
+        onModelLoaded?.Invoke();
+
     }
 
-    public async void LoadTextures(string allPath)
+    public async void LoadTextures(List<string> paths)
     {
         if (loadedTextures.Count != 0)
             foreach (Texture2DInfo item in loadedTextures)
@@ -108,7 +114,7 @@ public class ARObjectLoader : MonoBehaviour
 
         #region DEBUG
 #if true || UNITY_EDITOR
-        Debug.Log($"Requesting textures from {allPath}");
+        Debug.Log($"Requesting textures from {paths}");
         if (!modelLoaded)
         {
             Debug.LogError("Illegal LoadTextures call on null gameObject");
@@ -117,7 +123,7 @@ public class ARObjectLoader : MonoBehaviour
 #endif
         #endregion
 
-        loadedTextures = Texture2DInfo.GetTexturesFromCombinedPath(allPath);
+        loadedTextures = Texture2DInfo.GetTexturesFromPaths(paths);
         ARObject.ApplyTextures(loadedTextures);
     }
 

@@ -1,5 +1,7 @@
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
+using System.Collections.Generic;
+using System.Linq;
 #if UNITY_IOS
 using UnityEngine.XR.ARKit;
 #endif
@@ -91,6 +93,7 @@ public class FlutterMessagesReciever : MonoBehaviour
 
     public void LoadTexture(string allPath)
     {
-        objectLoader.LoadTextures(allPath);
+        List<string> splitted = allPath.Split(", ").ToList();
+        objectLoader.LoadTextures(splitted);
     }
 }
