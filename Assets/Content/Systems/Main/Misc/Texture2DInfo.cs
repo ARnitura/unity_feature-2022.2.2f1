@@ -65,6 +65,7 @@ public class Texture2DInfo : IDisposable
             case "normal":
             case "nor":
             case "normalmap":
+            case "nrm":
                 Type = TextureType.Normal;
                 Texture = LoadNormalData(path);
                 break;
@@ -76,6 +77,7 @@ public class Texture2DInfo : IDisposable
                 break;
 
             case "ao":
+            case "ambient":
             case "ambientocclusion":
                 Type = TextureType.AmbientOcclusion;
                 Texture = LoadTextureData(path);
@@ -103,7 +105,7 @@ public class Texture2DInfo : IDisposable
             if (!trimmedMatName.Contains(MaterialName) && !MaterialName.Contains(trimmedMatName))
             {
 #if true || UNITY_EDITOR
-                Debug.LogError($"Refused texture {ToString()} on material <{trimmedMatName}>");
+                // Debug.LogError($"Refused texture {ToString()} on material <{trimmedMatName}>");
 #endif
                 return false;
             }
