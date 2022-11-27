@@ -78,10 +78,24 @@ public class ScanManager : MonoBehaviour
 
 
         scanEndButton.onClick.AddListener(() => { EndButton().Forget(); });
-
+        GlobalState.StateChanged += GlobalState_StateChanged;
         // Debug.Log("on messages start");
     }
 
+    private void GlobalState_StateChanged(GlobalState.State obj)
+    {
+        if (obj == GlobalState.State.Scan)
+        {
+            helpStartGroup.gameObject.SetActive(true);
+            helpEndGroup.gameObject.SetActive(true);
+            StartScan();
+        }
+        else
+        {
+            helpStartGroup.gameObject.SetActive(false);
+            helpEndGroup.gameObject.SetActive(false);
+        }
+    }
 
     public void StartScan()
     {
@@ -170,6 +184,7 @@ public class ScanManager : MonoBehaviour
         raycastBlocker.enabled = false;
         FindObjectOfType<PlacementIndicator>(true).gameObject.SetActive(true);
         ScanComplete = true;
+        GlobalState.SetState(GlobalState.State.ARObjectPlacement);
 
     }
 

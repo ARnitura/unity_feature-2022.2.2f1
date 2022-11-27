@@ -15,9 +15,26 @@ public class WorldPosButtonsManager : MonoBehaviour
 
     public static WorldPosButtonsManager Instance { get; private set; }
 
-    private void Start() => Instance = this;
 
     private readonly List<ScreenButton> screenButtons = new List<ScreenButton>();
+
+    private void Start()
+    {
+        GlobalState.StateChanged += GlobalState_StateChanged;
+        Instance = this;
+    }
+
+    private void GlobalState_StateChanged(GlobalState.State obj)
+    {
+        if (obj == GlobalState.State.ARObject)
+            foreach (var item in screenButtons)
+                item.gameObject.SetActive(true);
+        else
+            foreach (var item in screenButtons)
+                item.gameObject.SetActive(false);
+    }
+
+
 
 
     public void AddButton(Transform reference, Action onClickAction = null)

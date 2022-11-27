@@ -12,15 +12,17 @@ public abstract class UIWorldMapper<T> : MonoBehaviour where T : Component
     [SerializeField]
     protected Vector3 _offset;
     private bool _camOrth;
-    private Transform canvasTransform;
-
+    private Canvas _canvas;
+    private Vector3 lastTarget = Vector3.zero;
+    private Transform refTransform;
     public virtual void Init(Canvas targetCanvas, T reference)
     {
         ReferenceObject = reference;
         _targetCamera = Camera.main;
         _uiPointWorld = GetComponent<RectTransform>();
         _planeDistance = targetCanvas.planeDistance;
-        canvasTransform = targetCanvas.transform;
+        _canvas = targetCanvas;
+        refTransform = ReferenceObject.transform;
 
         if (_targetCamera.orthographic)
             _camOrth = true;
@@ -30,26 +32,33 @@ public abstract class UIWorldMapper<T> : MonoBehaviour where T : Component
 
     public virtual void Refresh()
     {
+        Vector3 curTarget = GetMapTarget();
+        if ((curTarget - lastTarget).sqrMagnitude < 0.01f)
+            return;
 
-        Transform refTransform = ReferenceObject.transform;
-        Vector3 targetPosition = GetMapTarget() + refTransform.right * _offset.x + refTransform.up * _offset.y + refTransform.forward * _offset.z;
+        Vector3 targetPosition = curTarget + refTransform.right * _offset.x + refTransform.up * _offset.y + refTransform.forward * _offset.z;
 
         if (_targetCamera.WorldToScreenPoint(targetPosition).z < 0)
             return;
 
-        Vector2 screenPos = _targetCamera.WorldToScreenPoint(targetPosition);
+        _uiPointWorld.localPosition = _canvas.WorldToCanvasPosition(targetPosition, _targetCamera);
+        lastTarget = targetPosition;
+        /*
+
+                Vector2 screenPos = _targetCamera.WorldToScreenPoint(targetPosition).normalized * 100;
 
 
-        Vector3 canvasPos = _targetCamera.ScreenToWorldPoint((Vector3)screenPos + new Vector3(0, 0, _planeDistance));
+                Vector3 canvasPos = _targetCamera.ScreenToWorldPoint((Vector3)screenPos + new Vector3(0, 0, _planeDistance));
 
-        if (!_camOrth)
-            _uiPointWorld.localPosition = canvasTransform.InverseTransformPoint(canvasPos);
-        else
-            _uiPointWorld.localPosition = canvasTransform.InverseTransformPoint(canvasPos) / _targetCamera.orthographicSize;
+                if (!_camOrth)
+                    _uiPointWorld.localPosition = canvasTransform.InverseTransformPoint(canvasPos);
+                else
+                    _uiPointWorld.localPosition = canvasTransform.InverseTransformPoint(canvasPos) / _targetCamera.orthographicSize;
 
-        Vector3 localPosition = _uiPointWorld.localPosition;
-        localPosition = new Vector3(localPosition.x, localPosition.y, 0);
-        _uiPointWorld.localPosition = localPosition;
+                Vector3 localPosition = _uiPointWorld.localPosition;
+                localPosition.z = 0;
+
+                _uiPointWorld.localPosition = localPosition;*/
     }
 
     protected abstract Vector3 GetMapTarget();

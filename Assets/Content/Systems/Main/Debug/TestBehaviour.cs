@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 using UnityEngine.Networking;
-using static UnityEditor.Progress;
 
 public class TestBehaviour : MonoBehaviour
 {

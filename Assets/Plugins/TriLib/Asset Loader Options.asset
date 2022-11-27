@@ -23,7 +23,7 @@ MonoBehaviour:
   ReadEnabled: 1
   ReadAndWriteEnabled: 1
   OptimizeMeshes: 1
-  GenerateColliders: 1
+  GenerateColliders: 0
   ConvexColliders: 0
   ImportBlendShapes: 0
   ImportColors: 0

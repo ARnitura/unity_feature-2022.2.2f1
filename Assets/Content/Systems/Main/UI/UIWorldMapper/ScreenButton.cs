@@ -23,7 +23,7 @@ public class ScreenButton : UIWorldMapper<Transform>
         base.Refresh();
 
         //TODO: make it an event and dont load main thread with this bullshit
-        gameObject.SetActive(ReferenceObject.gameObject.activeInHierarchy);
+        //gameObject.SetActive(ReferenceObject.gameObject.activeInHierarchy);
     }
 
     protected override Vector3 GetMapTarget()

@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using TriLibCore;
+using TriLibCore.Interfaces;
 using UnityEngine;
 
 public class ARObjectLoader : MonoBehaviour
@@ -26,7 +27,7 @@ public class ARObjectLoader : MonoBehaviour
 
     [Header("UI")]
     [SerializeField]
-    private ScanManager messages;
+    private ScanManager scanManager;
 
     [Header("Debug")]
     [SerializeField]
@@ -92,9 +93,11 @@ public class ARObjectLoader : MonoBehaviour
         ARObject.Init(assetLoaderContext.RootGameObject.transform, decorator);
         UnityMessageManager.Instance.SendMessageToFlutter("ar_model_loaded");
         modelLoaded = true;
+        placer.SelectObject(ARObject);
 
-        messages.StartScan();
-        placer.AssignObject(ARObject);
+        GlobalState.SetState(GlobalState.State.Scan);
+        //scanManager.StartScan();
+
 
 #if true || UNITY_EDITOR
         Debug.LogWarning($"Model loaded <{assetLoaderContext.RootGameObject.name}>");
@@ -137,15 +140,22 @@ public class ARObjectLoader : MonoBehaviour
         else
             ARObject = Instantiate(arObjectPrefab, Vector3.one * 9999, Quaternion.identity);
 
+
+
+
         Transform model = Instantiate(debugModelPrefab, Vector3.zero, Quaternion.identity);
         model.SetParent(ARObject.transform);
         ARObject.Init(model, decorator);
 
 
-        placer.AssignObject(ARObject);
 
+        UnityMessageManager.Instance.SendMessageToFlutter("ar_model_loaded");
         modelLoaded = true;
-        messages.StartScan();
+        placer.SelectObject(ARObject);
+
+        GlobalState.SetState(GlobalState.State.Scan);
+
+        onModelLoaded?.Invoke();
         Debug.LogWarning("Loaded model from resources");
     }
 #endif

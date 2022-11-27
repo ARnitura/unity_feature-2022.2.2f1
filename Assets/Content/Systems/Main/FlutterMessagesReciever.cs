@@ -46,6 +46,7 @@ public class FlutterMessagesReciever : MonoBehaviour
         session.subsystem.Start();
         
 #endif
+        GlobalState.SetState(GlobalState.State.None);
         objectPlacer.ResetObject();
         //objectPlacer.EnableVisual();
         //objectLoader.ClearObject();
@@ -82,7 +83,15 @@ public class FlutterMessagesReciever : MonoBehaviour
 
     }
 
+    public void EnableAnchorMode()
+    {
+        GlobalState.SetState(GlobalState.State.ARWallCreation);
+    }
 
+    public void DisableAnchorMode()
+    {
+        GlobalState.SetState(GlobalState.PreviousState);
+    }
 
 
 
@@ -95,5 +104,11 @@ public class FlutterMessagesReciever : MonoBehaviour
     {
         List<string> splitted = allPath.Split(", ").ToList();
         objectLoader.LoadTextures(splitted);
+    }
+
+
+    public void EnterAnchorCreation()
+    {
+        GlobalState.SetState(GlobalState.State.ARWallCreation);
     }
 }
