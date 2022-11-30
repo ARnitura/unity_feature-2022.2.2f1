@@ -5,6 +5,7 @@ using UnityEngine;
 
 public class GlobalStateDebugText : MonoBehaviour
 {
+#if DEVELOPMENT_BUILD || UNITY_EDITOR
     private void Awake()
     {
         GlobalState.StateChanged += GlobalState_StateChanged;
@@ -14,5 +15,5 @@ public class GlobalStateDebugText : MonoBehaviour
     {
         GetComponent<TextMeshProUGUI>().text = $"Current mode: {obj}";
     }
-
+#endif
 }

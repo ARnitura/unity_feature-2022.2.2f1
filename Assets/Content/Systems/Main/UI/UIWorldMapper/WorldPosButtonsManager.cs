@@ -48,6 +48,9 @@ public class WorldPosButtonsManager : MonoBehaviour
 
     public void AddToggleButton(Transform reference, Action onAction = null, Action offAction = null)
     {
+        if (reference == null)
+            throw new ArgumentNullException("Button's Transform reference can't be null");
+
         ScreenButtonToggle newButton = Instantiate(toggleButtonPrefab, targetCanvas.transform);
         newButton.Init(targetCanvas, reference);
         newButton.AddClickAction(onAction, offAction);

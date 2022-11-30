@@ -1,4 +1,5 @@
 using Cysharp.Threading.Tasks;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -32,6 +33,9 @@ public class ARObject : MonoBehaviour
 
     public void Init(Transform modelTransform, ARObjectDecorator decorator)
     {
+        if (modelRenderers == null)
+            throw new ArgumentNullException("Can't init ARObject because modelTransform is null");
+
         Model = modelTransform;
         Model.localPosition = Vector3.zero;
         Model.localRotation = Quaternion.identity;
