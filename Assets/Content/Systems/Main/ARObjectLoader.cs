@@ -75,7 +75,7 @@ public class ARObjectLoader : MonoBehaviour
         AssetLoader.LoadModelFromFile(filePath, null,
             delegate (AssetLoaderContext assetLoaderContext) { OnModelLoaded(assetLoaderContext); },
             delegate (AssetLoaderContext context, float progrss) { UnityMessageManager.Instance.SendMessageToFlutter($"{{\"percentLoading\": {Mathf.RoundToInt(progrss * 100)}}}"); },
-            null,
+            delegate (IContextualizedError context) { Debug.LogError($"Failed to load 3d model: {context.GetInnerException().Message}"); },
             ARObject.gameObject,
             assetLoaderOptions);
 
