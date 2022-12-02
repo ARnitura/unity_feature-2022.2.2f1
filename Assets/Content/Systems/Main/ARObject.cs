@@ -33,7 +33,7 @@ public class ARObject : MonoBehaviour
 
     public void Init(Transform modelTransform, ARObjectDecorator decorator)
     {
-        if (modelRenderers == null)
+        if (modelTransform == null)
             throw new ArgumentNullException("Can't init ARObject because modelTransform is null");
 
         Model = modelTransform;
