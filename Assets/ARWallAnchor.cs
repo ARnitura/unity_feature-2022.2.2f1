@@ -22,6 +22,11 @@ public class ARWallAnchor : MonoBehaviour
         GlobalState.StateChanged += GlobalState_StateChanged;
     }
 
+    private void OnDestroy()
+    {
+        GlobalState.StateChanged -= GlobalState_StateChanged;
+    }
+
     private void GlobalState_StateChanged(GlobalState.State obj)
     {
         gameObject.SetActive(obj == GlobalState.State.ARWallCreation || obj == GlobalState.State.ARWallEdit);

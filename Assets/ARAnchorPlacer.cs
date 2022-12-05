@@ -369,6 +369,9 @@ public class ARAnchorPlacer : MonoBehaviour
                 UpdatePreviewRuler(selectedAnchor.NextAnchor.transform.position, selectedAnchor.transform.position);
             else
                 UpdatePreviewRuler(selectedAnchor.PreviousAnchor.transform.position, selectedAnchor.transform.position);
+
+
+            UnityMessageManager.Instance.SendMessageToFlutter("OnAnchorDeletionEnabled");
         }
         else
         {
@@ -379,8 +382,35 @@ public class ARAnchorPlacer : MonoBehaviour
 
             //goto arObject mode
             if (GlobalState.CurrentState == GlobalState.State.ARWallEdit)
+            {
+                UnityMessageManager.Instance.SendMessageToFlutter("OnAnchorCreationExit");
                 GlobalState.SetState(GlobalState.State.ARObject);
-
+            }
+            UnityMessageManager.Instance.SendMessageToFlutter("OnAnchorDeletionDisabled");
         }
+    }
+
+    public void TryDeleteSelectedAnchor()
+    {
+        if (selectedAnchor.PreviousAnchor != null)
+            Destroy(selectedAnchor.PreviousAnchor.gameObject);
+
+        if (selectedAnchor.NextAnchor != null)
+            Destroy(selectedAnchor.NextAnchor.gameObject);
+
+        foreach (var item in selectedAnchor.ConnectedWalls)
+        {
+            Destroy(item.gameObject);
+        }
+
+        anchorEditArrows.transform.parent = null;
+        anchorEditArrows.gameObject.SetActive(false);
+        previewRuler.gameObject.SetActive(false);
+
+        Destroy(selectedAnchor.gameObject);
+
+        selectedAnchor = null;
+        //UnityMessageManager.Instance.SendMessageToFlutter("OnAnchorCreationExit");
+        //GlobalState.SetState(GlobalState.State.ARObject);
     }
 }

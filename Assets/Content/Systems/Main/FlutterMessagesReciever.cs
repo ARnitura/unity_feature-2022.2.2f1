@@ -111,4 +111,9 @@ public class FlutterMessagesReciever : MonoBehaviour
     {
         GlobalState.SetState(GlobalState.State.ARWallCreation);
     }
+
+    public void TryDeleteSelectedAnchor()
+    {
+        FindObjectOfType<ARAnchorPlacer>().TryDeleteSelectedAnchor();
+    }
 }
