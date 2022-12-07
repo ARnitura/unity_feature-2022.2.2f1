@@ -158,7 +158,7 @@ public class Texture2DInfo : IDisposable
             fileData = File.ReadAllBytes(filePath);
             tex = new Texture2D(2, 2);
 
-            if (!tex.LoadImage(fileData)) //..this will auto-resize the texture dimensions.
+            if (!tex.LoadImage(fileData, true)) //..this will auto-resize the texture dimensions.
 #if true || UNITY_EDITOR
             {
                 Debug.LogError($"Failed to load texture from path: {filePath} - invalid format");
