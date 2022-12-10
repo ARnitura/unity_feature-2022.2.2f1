@@ -26,7 +26,7 @@ MonoBehaviour:
   GenerateColliders: 0
   ConvexColliders: 0
   ImportBlendShapes: 0
-  ImportColors: 0
+  ImportColors: 1
   IndexFormat: 1
   LODScreenRelativeTransitionHeightBase: 0.75
   KeepQuads: 0
@@ -34,7 +34,7 @@ MonoBehaviour:
   SmoothingAngle: 60
   ImportBlendShapeNormals: 0
   CalculateBlendShapeNormals: 0
-  ImportTangents: 0
+  ImportTangents: 1
   SwapUVs: 0
   ImportMaterials: 1
   MaterialMappers:
@@ -72,17 +72,16 @@ MonoBehaviour:
   AutomaticallyPlayLegacyAnimations: 0
   ResampleFrequency: 4
   AnimationWrapMode: 1
-  AnimationClipMappers:
-  - {fileID: 11400000, guid: f8e164fd2167a0049a4ec7e5bb8b2713, type: 2}
+  AnimationClipMappers: []
   ExternalDataMapper: {fileID: 0}
-  ShowLoadingWarnings: 0
+  ShowLoadingWarnings: 1
   CloseStreamAutomatically: 1
   Timeout: 180
   DestroyOnError: 1
   EnsureQuaternionContinuity: 0
   UseMaterialKeywords: 0
   ForceGCCollectionWhileLoading: 0
-  MergeVertices: 1
+  MergeVertices: 0
   MarkTexturesNoLongerReadable: 1
   UseUnityNativeNormalCalculator: 0
   GCHelperCollectionInterval: 20
@@ -99,6 +98,6 @@ MonoBehaviour:
   LoadMaterialsProgressively: 1
   ImportCameras: 0
   ImportLights: 0
-  DisableObjectsRenaming: 0
+  DisableObjectsRenaming: 1
   MergeSingleChild: 0
   SetUnusedTexturePropertiesToNull: 0
