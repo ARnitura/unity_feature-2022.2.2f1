@@ -128,6 +128,8 @@ public class ScanManager : MonoBehaviour
         targetPlanesCount = androidTargetPlanesCount;
 #endif
 
+        Debug.Log("Scan started");
+
         scanSlider.maxValue = targetPlanesCount + targetUpdatesCount;
         //Debug.Log($"planeManager {(planeManager.enabled ? "online" : "offline") }");
         FindObjectOfType<PlacementIndicator>(true).gameObject.SetActive(false);
@@ -135,6 +137,8 @@ public class ScanManager : MonoBehaviour
 
     private async UniTask EndScan()
     {
+        Debug.Log("Scan ended");
+
         foreach (var item in addedPlanes)
             item.boundaryChanged -= Item_boundaryChanged;
 
@@ -190,7 +194,7 @@ public class ScanManager : MonoBehaviour
 
     private void PlaneManager_planesChanged(ARPlanesChangedEventArgs obj)
     {
-        // Debug.Log("planes updated");
+
         if (scanCompleteInternal)
             return;
 
@@ -215,6 +219,8 @@ public class ScanManager : MonoBehaviour
             if (currentPlanesCount > targetPlanesCount)
                 currentPlanesCount = targetPlanesCount;
 
+            Debug.Log($"Planes updated: target {targetPlanesCount}, actual {currentPlanesCount}");
+
             UpdateSlider().Forget();
         }
 
@@ -226,6 +232,7 @@ public class ScanManager : MonoBehaviour
             return;
 
         currentUpdatesCount++;
+        Debug.Log($"Plane boundary updated: target {targetUpdatesCount}, actual {currentUpdatesCount}");
 
         UpdateSlider().Forget();
     }

@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using UnityEngine;
 
+[DefaultExecutionOrder(1000)]
 public class UIEventManager : MonoBehaviour
 {
     [SerializeField]
@@ -26,15 +27,15 @@ public class UIEventManager : MonoBehaviour
         if (instance == null)
             instance = this;
         else
+        {
             DestroyImmediate(gameObject);
-    }
+            return;
+        }
 
-    private void OnEnable()
-    {
         Application.logMessageReceived += LogCallback;
     }
 
-    private void OnDisable()
+    private void OnDestroy()
     {
         Application.logMessageReceived -= LogCallback;
     }
