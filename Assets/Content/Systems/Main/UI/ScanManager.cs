@@ -148,10 +148,11 @@ public class ScanManager : MonoBehaviour
 
         planeManager.enabled = false;
 
+        /*
 #if !UNITY_EDITOR
         planeManager.subsystem.Stop();
 #endif
-
+        */
 
         scanCompleteInternal = true;
         scanEndButton.enabled = true;

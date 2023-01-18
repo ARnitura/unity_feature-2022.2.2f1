@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.XR.ARCore;
 #if UNITY_IOS
 using UnityEngine.XR.ARKit;
 #endif
@@ -42,10 +43,15 @@ public class FlutterMessagesReciever : MonoBehaviour
 #endif
 
         Application.targetFrameRate = 60;
+        /*
 #if !UNITY_EDITOR
         session.subsystem.Start();
         
 #endif
+        */
+        session.Reset();
+        session.enabled = true;
+        
         GlobalState.SetState(GlobalState.State.None);
         objectPlacer.ResetObject();
         //objectPlacer.EnableVisual();
@@ -63,6 +69,7 @@ public class FlutterMessagesReciever : MonoBehaviour
         Debug.LogWarning("Clear AR call");
 #endif
 
+        /*
 #if UNITY_IOS
         if (session.subsystem is ARKitSessionSubsystem subsystem)
         {
@@ -75,10 +82,16 @@ public class FlutterMessagesReciever : MonoBehaviour
         session.subsystem.Stop();
         aRPlaneManager.subsystem.Stop();
 #endif
+        */
+        session.enabled = false;
+
+
+
+
         objectPlacer.ResetObject();
         //objectPlacer.EnableVisual();
         //objectLoader.ClearObject();
-        aRPlaneManager.enabled = false;
+        //aRPlaneManager.enabled = false;
         Application.targetFrameRate = 5;
 
     }
