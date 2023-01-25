@@ -59,27 +59,8 @@ public class ScanManager : MonoBehaviour
     // Start is called before the first frame update
     private void Start()
     {
-        // ARSession.stateChanged += ARSession_stateChanged;
-
-
-
-
-        helpEndGroup.blocksRaycasts = false;
-        helpStartGroup.blocksRaycasts = false;
-
-        helpEndGroup.alpha = 0;
-        helpStartGroup.alpha = 0;
-        scanSlider.value = 0;
-        currentPlanesCount = 0;
-        currentUpdatesCount = 0;
-        raycastBlocker.enabled = false;
-
-
-
-
         scanEndButton.onClick.AddListener(() => { EndButton().Forget(); });
         GlobalState.StateChanged += GlobalState_StateChanged;
-        // Debug.Log("on messages start");
     }
 
     private void GlobalState_StateChanged(GlobalState.State obj)
@@ -92,13 +73,41 @@ public class ScanManager : MonoBehaviour
         }
         else
         {
+            try
+            {
+                planeManager.planesChanged -= PlaneManager_planesChanged;
+            }
+            catch
+            {
+
+            }
+
+            foreach (var item in addedPlanes)
+                item.boundaryChanged -= Item_boundaryChanged;
+
+            addedPlanes.Clear();
+
+
             helpStartGroup.gameObject.SetActive(false);
             helpEndGroup.gameObject.SetActive(false);
+
+            helpEndGroup.blocksRaycasts = false;
+            helpStartGroup.blocksRaycasts = false;
+
+            helpEndGroup.alpha = 0;
+            helpStartGroup.alpha = 0;
+            scanSlider.value = 0;
+            currentPlanesCount = 0;
+            currentUpdatesCount = 0;
+            raycastBlocker.enabled = false;
+            planeManager.enabled = false;
         }
     }
 
     public void StartScan()
     {
+
+
         planeManager.planesChanged += PlaneManager_planesChanged;
 
         helpEndGroup.blocksRaycasts = false;
@@ -217,8 +226,12 @@ public class ScanManager : MonoBehaviour
             currentPlanesCount += obj.added.Count;
             currentPlanesCount -= obj.removed.Count;
 
+
             if (currentPlanesCount > targetPlanesCount)
                 currentPlanesCount = targetPlanesCount;
+
+            if (currentPlanesCount < obj.updated.Count)
+                currentPlanesCount = obj.updated.Count;
 
             Debug.Log($"Planes updated: target {targetPlanesCount}, actual {currentPlanesCount}");
 

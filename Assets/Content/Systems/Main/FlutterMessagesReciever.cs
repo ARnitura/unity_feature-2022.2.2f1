@@ -51,7 +51,7 @@ public class FlutterMessagesReciever : MonoBehaviour
         */
         session.Reset();
         session.enabled = true;
-        
+
         GlobalState.SetState(GlobalState.State.None);
         objectPlacer.ResetObject();
         //objectPlacer.EnableVisual();
@@ -93,6 +93,7 @@ public class FlutterMessagesReciever : MonoBehaviour
         //objectLoader.ClearObject();
         //aRPlaneManager.enabled = false;
         Application.targetFrameRate = 5;
+        GlobalState.SetState(GlobalState.State.None);
 
     }
 

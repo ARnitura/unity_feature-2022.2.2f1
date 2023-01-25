@@ -161,10 +161,19 @@ public class ARObjectManipulator : MonoBehaviour
         Vector3 worldPos2 = cam.ScreenToWorldPoint(new Vector3(screenPos.x - screenDelta.x, screenPos.y - screenDelta.y, distance));
         Vector3 worldDelta = worldPos1 - worldPos2;
 #else
-        Vector3 worldDelta = LeanTouch.Fingers[0].GetWorldDelta(Vector3.Distance(placedTransform.position, cam.transform.position), cam);
+        //Vector3 worldDelta = LeanTouch.Fingers[0].GetWorldDelta(Vector3.Distance(placedTransform.position, cam.transform.position), cam);
+
+        Vector3 screenPos = LeanTouch.Fingers[0].ScreenPosition;
+        Vector3 screenDelta = LeanTouch.Fingers[0].ScreenDelta;
+
+        float distance = Vector3.Distance(placedTransform.position, cam.transform.position);
+        Vector3 worldPos1 = cam.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, distance));
+        Vector3 worldPos2 = cam.ScreenToWorldPoint(new Vector3(screenPos.x - screenDelta.x, screenPos.y - screenDelta.y, distance));
+        Vector3 worldDelta = worldPos1 - worldPos2;
+
 #endif
 
-        worldDelta = transform.InverseTransformDirection(worldDelta);
+        worldDelta = cam.transform.InverseTransformDirection(worldDelta);
         Vector3 projectedCameraForward = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up);
         Vector3 rightDirection = Vector3.ProjectOnPlane(cam.transform.right, Vector3.up);
 
