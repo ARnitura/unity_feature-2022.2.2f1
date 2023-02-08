@@ -10,7 +10,7 @@ using UnityEngine.Networking;
 
 public class Texture2DInfo : IDisposable
 {
-    public enum TextureType { Albedo, Normal, Specular, AmbientOcclusion, Invalid }
+    public enum TextureType { Albedo, Normal, Specular, AmbientOcclusion, SharedNormal, Invalid }
 
 
     public string Path { get; private set; }
@@ -38,14 +38,14 @@ public class Texture2DInfo : IDisposable
         }
 
 
-        MaterialName = matNameBuilder.ToString().ToLower();
+        MaterialName = matNameBuilder.ToString().Trim().ToLower();
 
         string typeName = nameParts[nameParts.Length - 1].ToLower();
         typeName.Trim();
 
 #if true || UNITY_EDITOR
         if (typeName.Any(char.IsDigit))
-            Debug.LogWarning($"Texture type contains digits! This is not allowed!\nTexture: {MaterialName}_{typeName}.???");
+            Debug.LogWarning($"Texture type contains digits! This is not allowed!\nTexture: {System.IO.Path.GetFileName(Path)}");
 #endif
         typeName = typeName.RemoveDigits();
 
@@ -66,7 +66,10 @@ public class Texture2DInfo : IDisposable
             case "nor":
             case "normalmap":
             case "nrm":
-                Type = TextureType.Normal;
+                if (MaterialName == string.Empty)
+                    Type = TextureType.SharedNormal;
+                else
+                    Type = TextureType.Normal;
                 Texture = LoadNormalData(path);
                 break;
 
@@ -87,6 +90,7 @@ public class Texture2DInfo : IDisposable
 #if true || UNITY_EDITOR
         if (Type == TextureType.Invalid)
         {
+
             Debug.LogError($"Couldn't parse texture type\nMaterial<{MaterialName}>\nType<{typeName}>\nat {path}");
         }
 #endif
@@ -120,6 +124,10 @@ public class Texture2DInfo : IDisposable
                 return ApplyToMaterial(mat, "_MainTex");
             case TextureType.Normal:
                 return ApplyToMaterial(mat, "_BumpMap");
+
+
+            case TextureType.SharedNormal:
+                return ApplyToMaterial(mat, "_BumpMapShared");
             case TextureType.Specular:
                 return ApplyToMaterial(mat, "_SpecGlossMap");
             case TextureType.AmbientOcclusion:
@@ -136,6 +144,7 @@ public class Texture2DInfo : IDisposable
         else
         {
             Debug.LogError($"Failed to apply texture: MaterialName: <{MaterialName}> Type: {Type} - shader property {texName} doesn't exist");
+            //Debug.LogError($"Failed to apply texture: MaterialName: <{MaterialName}> Type: {Type} - shader property {texName} doesn't exist");
             return false;
         }
 
@@ -158,10 +167,11 @@ public class Texture2DInfo : IDisposable
             fileData = File.ReadAllBytes(filePath);
             tex = new Texture2D(2, 2);
 
-            if (!tex.LoadImage(fileData, true)) //..this will auto-resize the texture dimensions.
+            if (!tex.LoadImage(fileData)) //..this will auto-resize the texture dimensions.
 #if true || UNITY_EDITOR
             {
-                Debug.LogError($"Failed to load texture from path: {filePath} - invalid format");
+                Debug.LogError($"Failed to load texture from path: {filePath} - invalid format / corrupted file");
+                //Debug.LogError($"Failed to load texture from path: {filePath} - invalid format");
             }
 #endif
         }

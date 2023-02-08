@@ -8,7 +8,6 @@ using UnityEngine;
 using UnityEngine.InputSystem.HID;
 using UnityEngine.XR.ARFoundation;
 using UnityEngine.XR.ARSubsystems;
-using static UnityEngine.Rendering.DebugUI;
 
 public class ARAnchorPlacer : MonoBehaviour
 {

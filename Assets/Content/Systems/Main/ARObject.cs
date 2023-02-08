@@ -129,8 +129,10 @@ public class ARObject : MonoBehaviour
 
                 bool materialApplied = false;
                 foreach (Texture2DInfo texInfo in textures)
+                {
                     if (texInfo.TryApplyToMaterial(material))
                         materialApplied = true;
+                }
 
                 if (materialApplied)
                     appliedMaterials.Add(material);

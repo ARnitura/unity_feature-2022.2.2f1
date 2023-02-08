@@ -17,7 +17,7 @@ public class TestBehaviour : MonoBehaviour
     private int maxTestCount = 0;
     private int texFolderIndex = 0;
 
-#if true || UNITY_EDITOR
+#if true || UNITY_EDITOR 
     private void Start()
     {
         testFolderDir = Path.Combine(Directory.GetParent(Application.dataPath).FullName, @"testFolder\");//Debug.Log(Application.dataPath);//Debug.Log(Directory.GetParent(Application.dataPath).FullName);//Debug.Log(testFolderDir);
@@ -32,7 +32,7 @@ public class TestBehaviour : MonoBehaviour
             //load model
             Debug.Log($"Emulating <load model> call from flutter");
             //messages.LoadModel(testFolderDir + "1.fbx");
-            messages.LoadModel(testFolderDir + "GloriyaAnimation.fbx");
+            messages.LoadModel(testFolderDir + "lumix.fbx");
             //messages.LoadModel(testFolderDir + "SofaBoneAnimExample.fbx");
 
 
@@ -52,15 +52,8 @@ public class TestBehaviour : MonoBehaviour
                 );
             */
 
-            string fullpath = string.Join(", ",
-    testFolderDir + @"tex2\LeatherGreen_basecolor.jpg",
-    testFolderDir + @"tex2\LeatherGreen_normal.jpg",
-    testFolderDir + @"tex2\metal_basecolor.png",
-    testFolderDir + @"tex2\metal_specular.png",
-    testFolderDir + @"tex2\AO.png"
-    );
 
-            messages.LoadTexture(fullpath);
+            messages.LoadTexture(string.Join(", ", Directory.GetFiles(Path.Join(testFolderDir, "tex2"))));
 
         }
         if (Input.GetKeyDown(KeyCode.E))
