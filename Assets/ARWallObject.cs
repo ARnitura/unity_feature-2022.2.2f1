@@ -20,9 +20,15 @@ public class ARWallObject : MonoBehaviour
     public ARWallAnchor FromAnchor { get; private set; }
     public ARWallAnchor ToAnchor { get; private set; }
 
+
+    private MeshCollider meshCollider;
+
+
+
 #if UNITY_EDITOR
     private void Start()
     {
+        meshCollider = GetComponent<MeshCollider>();
         //mesh = new Mesh { name = "Procedural Mesh" };
         //UpdateMesh();
         //AssignMesh();
@@ -39,6 +45,7 @@ public class ARWallObject : MonoBehaviour
 
     internal void InitEmpty()
     {
+        meshCollider = GetComponent<MeshCollider>();
         FromAnchor = ToAnchor = null;
         mesh = new Mesh { name = "Procedural Mesh" };
         AssignMesh();
@@ -46,6 +53,7 @@ public class ARWallObject : MonoBehaviour
 
     internal void CreateMesh(ARWallAnchor to, ARWallAnchor from)
     {
+        meshCollider = GetComponent<MeshCollider>();
         FromAnchor = from;
         ToAnchor = to;
 
@@ -120,6 +128,14 @@ public class ARWallObject : MonoBehaviour
         };
 
         mesh.RecalculateBounds();
+
+        AssignCollider();
+    }
+
+    private void AssignCollider()
+    {
+        meshCollider.sharedMesh = null;
+        meshCollider.sharedMesh = mesh;
     }
 
     public void UpdateMeshFromPos(Vector3 from, Vector3 to)
@@ -183,11 +199,10 @@ public class ARWallObject : MonoBehaviour
         };
 
         mesh.RecalculateBounds();
+        AssignCollider();
     }
     private void AssignMesh()
     {
-
-
         GetComponent<MeshFilter>().mesh = mesh;
     }
 }

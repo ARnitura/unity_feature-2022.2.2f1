@@ -1,3 +1,4 @@
+using FlutterUnityIntegration;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -13,6 +14,8 @@ public static class GlobalState
 
     public static void SetState(State newState)
     {
+        UnityMessageManager.Instance.SendMessageToFlutter($"@s {newState}");
+
         PreviousState = CurrentState;
         CurrentState = newState;
         StateChanged?.Invoke(newState);

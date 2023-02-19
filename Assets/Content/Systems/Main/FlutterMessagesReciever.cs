@@ -27,6 +27,9 @@ public class FlutterMessagesReciever : MonoBehaviour
     [SerializeField]
     private ARObjectLoader objectLoader;
 
+    [SerializeField]
+    private ARObjectDecorator decorator;
+
 
     private void Start()
     {
@@ -94,26 +97,29 @@ public class FlutterMessagesReciever : MonoBehaviour
         //aRPlaneManager.enabled = false;
         Application.targetFrameRate = 5;
         GlobalState.SetState(GlobalState.State.None);
-
     }
-
-    public void EnableAnchorMode()
+    public void EnterAnchorCreationMode()
     {
         GlobalState.SetState(GlobalState.State.ARWallCreation);
     }
-
-    public void DisableAnchorMode()
+    public void EnterAnchorEditMode()
     {
-        GlobalState.SetState(GlobalState.PreviousState);
+        GlobalState.SetState(GlobalState.State.ARWallEdit);
     }
 
+    public void EnterARObjectMode()
+    {
+        GlobalState.SetState(GlobalState.State.ARObject);
+    }
 
-
+    public void ToggleRuler()
+    {
+        decorator.SwitchRuler();
+    }
     public void LoadModel(string filePath)
     {
         objectLoader.LoadModel(filePath);
     }
-
     public void LoadTexture(string allPath)
     {
         List<string> splitted = allPath.Split(", ").ToList();
@@ -121,13 +127,13 @@ public class FlutterMessagesReciever : MonoBehaviour
     }
 
 
-    public void EnterAnchorCreation()
-    {
-        GlobalState.SetState(GlobalState.State.ARWallCreation);
-    }
+
+
+
 
     public void TryDeleteSelectedAnchor()
     {
-        FindObjectOfType<ARAnchorPlacer>().TryDeleteSelectedAnchor();
+        if (GlobalState.CurrentState == GlobalState.State.ARWallEdit)
+            FindObjectOfType<ARAnchorEditor>().TryDeleteSelectedAnchor();
     }
 }

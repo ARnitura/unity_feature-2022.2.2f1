@@ -30,8 +30,7 @@ public class ARAnchorPlacer : MonoBehaviour
     [SerializeField]
     private ARWallObject previewWall;
 
-    [SerializeField]
-    private Transform anchorEditArrows;
+
 
 
     private ARRaycastManager m_RaycastManager;
@@ -67,14 +66,14 @@ public class ARAnchorPlacer : MonoBehaviour
             HideCreationPreview();
         }
 
-        if (obj == GlobalState.State.ARWallEdit)
+        if (obj == GlobalState.State.ARWallEdit && GlobalState.PreviousState == GlobalState.State.ARWallCreation)
         {
             HideCreationPreview();
-            SelectAnchor(previousAnchor);
+            GetComponent<ARAnchorEditor>().SelectAnchor(previousAnchor);
         }
         else
         {
-            SelectAnchor(null);
+            //GetComponent<ARAnchorEditor>().SelectAnchor(null);
         }
 
 
@@ -128,37 +127,7 @@ public class ARAnchorPlacer : MonoBehaviour
             }
         }
 
-        if (GlobalState.CurrentState == GlobalState.State.ARWallEdit)
-        {
-            if (selectedAnchor != null && currentInputState == InputState.Pressed)
-            {
-                //move selected anchor
-                MoveObject();
 
-                previewRuler.gameObject.SetActive(true);
-                if (selectedAnchor.NextAnchor != null)
-                    UpdatePreviewRuler(selectedAnchor.NextAnchor.transform.position, selectedAnchor.transform.position);
-                else
-                    UpdatePreviewRuler(selectedAnchor.PreviousAnchor.transform.position, selectedAnchor.transform.position);
-
-                foreach (var item in selectedAnchor.ConnectedWalls)
-                    item.UpdateMesh();
-
-            }
-
-
-
-            if (currentInputState != InputState.Down)
-                return;
-
-
-
-            //try to locate and move existing nachors
-            if (Physics.Raycast(Camera.main.ScreenPointToRay(touchPosition), out RaycastHit hit))
-            {
-                SelectAnchor(hit.transform.GetComponent<ARWallAnchor>());
-            }
-        }
 
     }
 
@@ -226,53 +195,6 @@ public class ARAnchorPlacer : MonoBehaviour
 #endif
 
 
-    }
-
-    private void MoveObject()
-    {
-#if !UNITY_EDITOR
-        if (Input.GetTouch(0).phase == TouchPhase.Began)
-        {
-            //OnMoveStart?.Invoke();
-        }
-        if (Input.GetTouch(0).phase == TouchPhase.Ended)
-        {
-           // OnMoveEnd?.Invoke();
-            return;
-        }
-#else
-
-
-#endif
-
-
-        //modelTransform.localPosition = Vector3.SmoothDamp(modelTransform.localPosition, Vector3.up * yUpLength, ref currentModelVelocity, 0.05f);
-
-        Camera cam = Camera.main;
-        float anchorY = selectedAnchor.transform.position.y;
-
-#if !UNITY_EDITOR
-        Vector3 screenPos = Input.GetTouch(0).position;
-        Vector3 screenDelta = Input.GetTouch(0).deltaPosition;
-
-        float distance = Vector3.Distance(selectedAnchor.transform.position, cam.transform.position);
-        Vector3 worldPos1 = cam.ScreenToWorldPoint(new Vector3(screenPos.x, screenPos.y, distance));
-        Vector3 worldPos2 = cam.ScreenToWorldPoint(new Vector3(screenPos.x - screenDelta.x, screenPos.y - screenDelta.y, distance));
-        Vector3 worldDelta = worldPos1 - worldPos2;
-#else
-        Vector3 worldDelta = LeanTouch.Fingers[0].GetWorldDelta(Vector3.Distance(selectedAnchor.transform.position, cam.transform.position), cam);
-#endif
-
-        worldDelta = transform.InverseTransformDirection(worldDelta);
-        Vector3 projectedCameraForward = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up);
-        Vector3 rightDirection = Vector3.ProjectOnPlane(cam.transform.right, Vector3.up);
-
-        Vector3 desiredPosition = selectedAnchor.transform.position + rightDirection * worldDelta.x + projectedCameraForward * worldDelta.y;
-        Vector3 clampedPosition = Vector3.ClampMagnitude(desiredPosition, 40);
-        clampedPosition.y = anchorY;
-
-
-        selectedAnchor.transform.position = clampedPosition;
     }
 
     public void TryCreateAnchorAtScreenCenter()
@@ -347,70 +269,5 @@ public class ARAnchorPlacer : MonoBehaviour
 #endif
     }
 
-    private void SelectAnchor(ARWallAnchor anchor)
-    {
-        var previousSelected = selectedAnchor;
 
-        if (previousSelected != null)
-            previousSelected.GetComponentInChildren<Renderer>().material.color = Color.white;
-
-        selectedAnchor = anchor;
-
-        if (selectedAnchor != null)
-        {
-            //show visual stuff
-            selectedAnchor.GetComponentInChildren<Renderer>().material.color = Color.red;
-            anchorEditArrows.gameObject.SetActive(true);
-            anchorEditArrows.transform.position = selectedAnchor.transform.position + Vector3.up * 0.01f;
-            anchorEditArrows.transform.parent = selectedAnchor.transform;
-
-            previewRuler.gameObject.SetActive(true);
-            if (selectedAnchor.NextAnchor != null)
-                UpdatePreviewRuler(selectedAnchor.NextAnchor.transform.position, selectedAnchor.transform.position);
-            else
-                UpdatePreviewRuler(selectedAnchor.PreviousAnchor.transform.position, selectedAnchor.transform.position);
-
-
-            UnityMessageManager.Instance.SendMessageToFlutter("OnAnchorDeletionEnabled");
-        }
-        else
-        {
-            //hide visual stuff
-            anchorEditArrows.transform.parent = null;
-            anchorEditArrows.gameObject.SetActive(false);
-            previewRuler.gameObject.SetActive(false);
-
-            //goto arObject mode
-            if (GlobalState.CurrentState == GlobalState.State.ARWallEdit)
-            {
-                UnityMessageManager.Instance.SendMessageToFlutter("OnAnchorCreationExit");
-                GlobalState.SetState(GlobalState.State.ARObject);
-            }
-            UnityMessageManager.Instance.SendMessageToFlutter("OnAnchorDeletionDisabled");
-        }
-    }
-
-    public void TryDeleteSelectedAnchor()
-    {
-        if (selectedAnchor.PreviousAnchor != null)
-            Destroy(selectedAnchor.PreviousAnchor.gameObject);
-
-        if (selectedAnchor.NextAnchor != null)
-            Destroy(selectedAnchor.NextAnchor.gameObject);
-
-        foreach (var item in selectedAnchor.ConnectedWalls)
-        {
-            Destroy(item.gameObject);
-        }
-
-        anchorEditArrows.transform.parent = null;
-        anchorEditArrows.gameObject.SetActive(false);
-        previewRuler.gameObject.SetActive(false);
-
-        Destroy(selectedAnchor.gameObject);
-
-        selectedAnchor = null;
-        //UnityMessageManager.Instance.SendMessageToFlutter("OnAnchorCreationExit");
-        //GlobalState.SetState(GlobalState.State.ARObject);
-    }
 }
