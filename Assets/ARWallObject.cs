@@ -72,7 +72,7 @@ public class ARWallObject : MonoBehaviour
         Vector3 fromPos = from.position;
         Vector3 toPos = to.position;
 
-        const float wallHeight = 2.5f;
+        const float wallHeight = 3f;
         const float wallThickness = 0.25f;
 
         float wallWidth = Vector3.Distance(fromPos, toPos);
