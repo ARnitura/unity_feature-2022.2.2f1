@@ -9168,7 +9168,7 @@ MonoBehaviour:
   helpMessages: {fileID: 834297476}
   session: {fileID: 1176725126}
   objectLoader: {fileID: 1357211391}
-  decorator: {fileID: 0}
+  decorator: {fileID: 1357211395}
 --- !u!4 &1207421183
 Transform:
   m_ObjectHideFlags: 0
